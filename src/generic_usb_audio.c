@@ -21,7 +21,10 @@
 #include <string.h>
 #include <stdint.h>
 #include "tusb.h"
+#include "global.h"
 #include "usb_descriptors.h"
+
+#if USB_ENABLE_AUDIO
 
 /* ── Streaming state ────────────────────────────────────────────────────── */
 static volatile bool spk_streaming = false;
@@ -613,3 +616,38 @@ uint32_t GenericUSB_Audio_MicFifoFrames(void)  { return mic_fifo_count();       
 
 uint32_t GenericUSB_Audio_FbCount(void)        { return generic_usb_fb_count;       }
 uint32_t GenericUSB_Audio_FbValue(void)        { return generic_usb_fb_value;       }
+
+#else
+
+void GenericUSB_AudioInit(void) {}
+void GenericUSB_AudioTask(void) {}
+void AudioIF_PushSamples(const int16_t *stereo_samples, uint32_t num_frames)
+{
+  (void)stereo_samples;
+  (void)num_frames;
+}
+uint32_t AudioIF_PopSamples(int16_t *stereo_samples, uint32_t num_frames)
+{
+  if (stereo_samples) {
+    memset(stereo_samples, 0, num_frames * GENERIC_USB_AUDIO_SPK_CHANNELS * sizeof(int16_t));
+  }
+  return 0;
+}
+
+uint32_t GenericUSB_Audio_RxPackets(void)      { return 0; }
+uint32_t GenericUSB_Audio_TxPackets(void)      { return 0; }
+uint32_t GenericUSB_Audio_SetItfCount(void)    { return 0; }
+uint32_t GenericUSB_Audio_RxDoneCount(void)    { return 0; }
+uint32_t GenericUSB_Audio_TxDoneCount(void)    { return 0; }
+uint32_t GenericUSB_Audio_TxShort(void)        { return 0; }
+uint32_t GenericUSB_Audio_RxShort(void)        { return 0; }
+uint32_t GenericUSB_Audio_SpkUnderflows(void)  { return 0; }
+uint32_t GenericUSB_Audio_SpkOverflows(void)   { return 0; }
+uint32_t GenericUSB_Audio_SpkFifoFrames(void)  { return 0; }
+uint32_t GenericUSB_Audio_MicOverflows(void)   { return 0; }
+uint32_t GenericUSB_Audio_MicUnderflows(void)  { return 0; }
+uint32_t GenericUSB_Audio_MicFifoFrames(void)  { return 0; }
+uint32_t GenericUSB_Audio_FbCount(void)        { return 0; }
+uint32_t GenericUSB_Audio_FbValue(void)        { return 0; }
+
+#endif

@@ -15,9 +15,33 @@
 #define USB_STRING_HID              "Generic USB NKRO Keyboard"
 #define USB_STRING_MSC              "Generic USB SD Card"
 
-#define DEBUG_TEST_CDC  1
-#define DEBUG_TEST_HID  1
-#define DEBUG_TEST_MIDI 1
+#ifndef USB_ENABLE_AUDIO
+#define USB_ENABLE_AUDIO 1
+#endif
+#ifndef USB_ENABLE_CDC
+#define USB_ENABLE_CDC   1
+#endif
+#ifndef USB_ENABLE_MIDI
+#define USB_ENABLE_MIDI  1
+#endif
+#ifndef USB_ENABLE_HID
+#define USB_ENABLE_HID   1
+#endif
+#ifndef USB_ENABLE_MSC
+#define USB_ENABLE_MSC   1
+#endif
+
+#ifndef DEBUG_TEST_CDC
+#define DEBUG_TEST_CDC  USB_ENABLE_CDC
+#endif
+#ifndef DEBUG_TEST_HID
+#define DEBUG_TEST_HID  USB_ENABLE_HID
+#endif
+#ifndef DEBUG_TEST_MIDI
+#define DEBUG_TEST_MIDI USB_ENABLE_MIDI
+#endif
+#ifndef DEBUG_TEST_SD
 #define DEBUG_TEST_SD   0
+#endif
 
 #endif /* GLOBAL_H_ */

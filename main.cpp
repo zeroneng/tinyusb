@@ -2,7 +2,9 @@
 #include "generic_usb_port.h"
 extern "C" {
 #include "global.h"
+#if USB_ENABLE_AUDIO
 #include "generic_usb_audio.h"
+#endif
 #include "generic_usb_cdc.h"
 #include "generic_usb_sd.h"
 }
@@ -11,6 +13,7 @@ using namespace daisy;
 
 DaisySeed hw;
 
+#if USB_ENABLE_AUDIO
 static void AudioCallback(AudioHandle::InputBuffer in,
                           AudioHandle::OutputBuffer out,
                           size_t size)
@@ -45,14 +48,17 @@ static void AudioCallback(AudioHandle::InputBuffer in,
         }
     }
 }
+#endif
 
 int main(void)
 {
     hw.Init(true);
 
+#if USB_ENABLE_AUDIO
     hw.SetAudioSampleRate(daisy::SaiHandle::Config::SampleRate::SAI_48KHZ);
     hw.SetAudioBlockSize(48);
     hw.StartAudio(AudioCallback);
+#endif
 
     GenericUSB_Init();
     GenericUSB_SDInit();
@@ -72,7 +78,7 @@ int main(void)
             last = now;
             led = !led;
             hw.SetLed(led);
-#if DEBUG_TEST_CDC
+#if USB_ENABLE_CDC && DEBUG_TEST_CDC
             GenericUSB_CDC_WriteString(led ? "LED: ON\r\n" : "LED: OFF\r\n");
             GenericUSB_CDC_Flush();
 #endif

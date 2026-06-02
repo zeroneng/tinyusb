@@ -2,6 +2,7 @@
 #define USB_DESCRIPTORS_H_
 
 #include "tusb.h"
+#include "global.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -9,15 +10,25 @@ extern "C" {
 
 /* Interface numbers */
 enum {
+#if USB_ENABLE_AUDIO
     ITF_NUM_AUDIO_CONTROL = 0,
     ITF_NUM_AUDIO_STREAMING_SPK,
     ITF_NUM_AUDIO_STREAMING_MIC,
+#endif
+#if USB_ENABLE_CDC
     ITF_NUM_CDC,
     ITF_NUM_CDC_DATA,
+#endif
+#if USB_ENABLE_MIDI
     ITF_NUM_MIDI_CONTROL,
     ITF_NUM_MIDI_STREAMING,
+#endif
+#if USB_ENABLE_HID
     ITF_NUM_HID,
+#endif
+#if USB_ENABLE_MSC
     ITF_NUM_MSC,
+#endif
     ITF_NUM_TOTAL
 };
 
@@ -36,6 +47,7 @@ enum {
 #endif
 
 /* ── Descriptor byte-length ─────────────────────────────────────────────── */
+#if USB_ENABLE_AUDIO
 #define TUD_AUDIO20_GENERIC_HEADSET_DESC_LEN  (   \
     TUD_AUDIO20_DESC_IAD_LEN                      \
   + TUD_AUDIO20_DESC_STD_AC_LEN                   \
@@ -58,8 +70,10 @@ enum {
   + TUD_AUDIO20_DESC_TYPE_I_FORMAT_LEN            \
   + TUD_AUDIO20_DESC_STD_AS_ISO_EP_LEN            \
   + TUD_AUDIO20_DESC_CS_AS_ISO_EP_LEN)
+#endif
 
 /* ── Audio descriptor macro ─────────────────────────────────────────────── */
+#if USB_ENABLE_AUDIO
 /*  Speaker OUT : ADAPTIVE isochronous
  *  Mic    IN   : stereo ASYNCHRONOUS isochronous              */
 #define TUD_AUDIO20_GENERIC_HEADSET_DESCRIPTOR(_stridx, _epout, _epin)        \
@@ -124,6 +138,7 @@ enum {
     AUDIO20_CS_AS_ISO_DATA_EP_ATT_NON_MAX_PACKETS_OK,                          \
     AUDIO20_CTRL_NONE,                                                          \
     AUDIO20_CS_AS_ISO_DATA_EP_LOCK_DELAY_UNIT_UNDEFINED, 0x0000)
+#endif
 
 #ifdef __cplusplus
 }

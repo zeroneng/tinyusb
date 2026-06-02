@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include "global.h"
+
 #ifndef BOARD_TUD_RHPORT
 #define BOARD_TUD_RHPORT        0
 #endif
@@ -42,11 +44,11 @@ extern "C" {
 #endif
 
 /* Class enables */
-#define CFG_TUD_CDC     1
-#define CFG_TUD_MSC     1
-#define CFG_TUD_HID     1
-#define CFG_TUD_MIDI    1
-#define CFG_TUD_AUDIO   1
+#define CFG_TUD_CDC     USB_ENABLE_CDC
+#define CFG_TUD_MSC     USB_ENABLE_MSC
+#define CFG_TUD_HID     USB_ENABLE_HID
+#define CFG_TUD_MIDI    USB_ENABLE_MIDI
+#define CFG_TUD_AUDIO   USB_ENABLE_AUDIO
 #define CFG_TUD_VENDOR  0
 
 /* ── Generic USB: UAC2 + CDC ACM, Daisy Seed / STM32H7 full-speed ─────────

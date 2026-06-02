@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "tusb.h"
+#include "global.h"
+
+#if USB_ENABLE_CDC
 
 #define GENERIC_USB_CDC_RX_RING_SIZE  512u
 
@@ -156,3 +159,45 @@ void tud_cdc_rx_cb(uint8_t itf)
         for (uint32_t i = 0; i < count; i++) rx_ring_push(buf[i]);
     }
 }
+
+#else
+
+void GenericUSB_CDCInit(void) {}
+void GenericUSB_CDCTask(void) {}
+bool GenericUSB_CDC_Connected(void) { return false; }
+uint32_t GenericUSB_CDC_Available(void) { return 0; }
+uint32_t GenericUSB_CDC_Read(uint8_t *dst, uint32_t max_len)
+{
+    (void)dst;
+    (void)max_len;
+    return 0;
+}
+uint32_t GenericUSB_CDC_Write(const uint8_t *src, uint32_t len)
+{
+    (void)src;
+    (void)len;
+    return 0;
+}
+uint32_t GenericUSB_CDC_PrintFloat(const char *label, float value)
+{
+    (void)label;
+    (void)value;
+    return 0;
+}
+uint32_t GenericUSB_CDC_PrintFloatLn(const char *label, float value)
+{
+    (void)label;
+    (void)value;
+    return 0;
+}
+uint32_t GenericUSB_CDC_WriteString(const char *s)
+{
+    (void)s;
+    return 0;
+}
+void     GenericUSB_CDC_Flush(void) {}
+uint32_t GenericUSB_CDC_RxBytes(void) { return 0; }
+uint32_t GenericUSB_CDC_TxBytes(void) { return 0; }
+uint32_t GenericUSB_CDC_DroppedRxBytes(void) { return 0; }
+
+#endif

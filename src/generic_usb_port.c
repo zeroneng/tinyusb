@@ -2,6 +2,7 @@
 
 #include "stm32h7xx_hal.h"
 #include "tusb.h"
+#include "global.h"
 #include "generic_usb_audio.h"
 #include "generic_usb_cdc.h"
 #include "generic_usb_hid.h"
@@ -60,11 +61,21 @@ void GenericUSB_Init(void)
   HAL_NVIC_SetPriority(OTG_HS_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
 
+#if USB_ENABLE_AUDIO
   GenericUSB_AudioInit();
+#endif
+#if USB_ENABLE_CDC
   GenericUSB_CDCInit();
+#endif
+#if USB_ENABLE_MIDI
   GenericUSB_MIDIInit();
+#endif
+#if USB_ENABLE_HID
   GenericUSB_HIDInit();
+#endif
+#if USB_ENABLE_MSC
   GenericUSB_MSCInit();
+#endif
 
   tud_configure_dwc2_t cfg = CFG_TUD_CONFIGURE_DWC2_DEFAULT;
   cfg.vbus_sensing = false;
@@ -90,10 +101,18 @@ uint32_t GenericUSB_NowMs(void)
 void GenericUSB_Task(void)
 {
   tud_task();
+#if USB_ENABLE_AUDIO
   GenericUSB_AudioTask();
+#endif
+#if USB_ENABLE_CDC
   GenericUSB_CDCTask();
+#endif
+#if USB_ENABLE_MIDI
   GenericUSB_MIDITask();
+#endif
+#if USB_ENABLE_HID
   GenericUSB_HIDTask();
+#endif
 }
 
 void GenericUSB_OTG_HS_IRQHandler(void)

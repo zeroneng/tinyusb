@@ -7,6 +7,8 @@
 #include "generic_usb_cdc.h"
 #include "generic_usb_port.h"
 
+#if USB_ENABLE_MIDI
+
 static uint32_t midi_rx_packets;
 static uint32_t midi_tx_packets;
 static uint32_t midi_dropped_packets;
@@ -108,3 +110,13 @@ uint32_t GenericUSB_MIDI_DroppedPackets(void)
 {
   return midi_dropped_packets;
 }
+
+#else
+
+void GenericUSB_MIDIInit(void) {}
+void GenericUSB_MIDITask(void) {}
+uint32_t GenericUSB_MIDI_RxPackets(void) { return 0; }
+uint32_t GenericUSB_MIDI_TxPackets(void) { return 0; }
+uint32_t GenericUSB_MIDI_DroppedPackets(void) { return 0; }
+
+#endif

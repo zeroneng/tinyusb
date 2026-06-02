@@ -55,6 +55,7 @@ enum {
 #define EPNUM_MSC_OUT     0x07u
 #define EPNUM_MSC_IN      0x87u
 
+#if USB_ENABLE_HID
 static uint8_t const desc_hid_report[] =
 {
   HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),
@@ -87,33 +88,80 @@ static uint8_t const desc_hid_report[] =
     HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),
   HID_COLLECTION_END
 };
+#endif
 
 uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
 {
+#if USB_ENABLE_HID
   (void)instance;
   return desc_hid_report;
+#else
+  (void)instance;
+  return NULL;
+#endif
 }
 
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_AUDIO20_GENERIC_HEADSET_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MIDI_DESC_LEN + TUD_HID_DESC_LEN + TUD_MSC_DESC_LEN)
+#if USB_ENABLE_AUDIO
+#define USB_DESC_LEN_AUDIO TUD_AUDIO20_GENERIC_HEADSET_DESC_LEN
+#else
+#define USB_DESC_LEN_AUDIO 0
+#endif
+#if USB_ENABLE_CDC
+#define USB_DESC_LEN_CDC TUD_CDC_DESC_LEN
+#else
+#define USB_DESC_LEN_CDC 0
+#endif
+#if USB_ENABLE_MIDI
+#define USB_DESC_LEN_MIDI TUD_MIDI_DESC_LEN
+#else
+#define USB_DESC_LEN_MIDI 0
+#endif
+#if USB_ENABLE_HID
+#define USB_DESC_LEN_HID TUD_HID_DESC_LEN
+#else
+#define USB_DESC_LEN_HID 0
+#endif
+#if USB_ENABLE_MSC
+#define USB_DESC_LEN_MSC TUD_MSC_DESC_LEN
+#else
+#define USB_DESC_LEN_MSC 0
+#endif
+
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN \
+  + USB_DESC_LEN_AUDIO \
+  + USB_DESC_LEN_CDC \
+  + USB_DESC_LEN_MIDI \
+  + USB_DESC_LEN_HID \
+  + USB_DESC_LEN_MSC)
 
 static uint8_t desc_configuration[] =
 {
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, 0, 0x00, 100),
 
+#if USB_ENABLE_AUDIO
   TUD_AUDIO20_GENERIC_HEADSET_DESCRIPTOR(
     STRID_AUDIO,
     EPNUM_AUDIO_OUT,
     EPNUM_AUDIO_IN),
+#endif
 
+#if USB_ENABLE_CDC
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, CFG_TUD_CDC_RX_EPSIZE),
+#endif
 
+#if USB_ENABLE_MIDI
   TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI_CONTROL, STRID_MIDI, EPNUM_MIDI_OUT, EPNUM_MIDI_IN, CFG_TUD_MIDI_EP_BUFSIZE),
+#endif
 
+#if USB_ENABLE_HID
   TUD_HID_DESCRIPTOR(ITF_NUM_HID, STRID_HID, HID_ITF_PROTOCOL_NONE,
                      sizeof(desc_hid_report), EPNUM_HID_IN,
                      CFG_TUD_HID_EP_BUFSIZE, 10),
+#endif
 
+#if USB_ENABLE_MSC
   TUD_MSC_DESCRIPTOR(ITF_NUM_MSC, STRID_MSC, EPNUM_MSC_OUT, EPNUM_MSC_IN, 64)
+#endif
 };
 
 

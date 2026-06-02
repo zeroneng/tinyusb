@@ -5,6 +5,8 @@
 #include "global.h"
 #include "generic_usb_port.h"
 
+#if USB_ENABLE_HID
+
 static uint32_t hid_in_reports = 0;
 static uint32_t hid_key_presses = 0;
 static uint32_t last_key_ms = 0;
@@ -95,3 +97,12 @@ void tud_hid_set_report_cb(uint8_t instance,
     (void)buffer;
     (void)bufsize;
 }
+
+#else
+
+void GenericUSB_HIDInit(void) {}
+void GenericUSB_HIDTask(void) {}
+uint32_t GenericUSB_HID_InputReports(void) { return 0; }
+uint32_t GenericUSB_HID_KeyPresses(void) { return 0; }
+
+#endif

@@ -3,6 +3,7 @@ TARGET = bypass
 LIBDAISY_DIR ?= ../../libDaisy
 TINYUSB_DIR ?= Middlewares/tinyusb
 BUILD_DIR = build
+USE_FATFS = 1
 
 CC = arm-none-eabi-gcc
 CXX = arm-none-eabi-g++
@@ -18,11 +19,14 @@ C_DEFS = \
 -DHSE_VALUE=16000000 \
 -DUSE_HAL_DRIVER \
 -DUSE_FULL_LL_DRIVER \
--DFILEIO_ENABLE_FATFS_READER \
 -DCFG_TUSB_MCU=OPT_MCU_STM32H7 \
 -DBOARD_TUD_MAX_SPEED=OPT_MODE_FULL_SPEED \
 -DBOARD_DEVICE_RHPORT_NUM=1 \
 -DBOARD_TUD_RHPORT=1
+
+ifeq ($(USE_FATFS),1)
+C_DEFS += -DFILEIO_ENABLE_FATFS_READER
+endif
 
 C_INCLUDES = \
 -I. \
@@ -75,8 +79,12 @@ $(TINYUSB_DIR)/src/class/hid/hid_device.c \
 $(TINYUSB_DIR)/src/class/midi/midi_device.c \
 $(TINYUSB_DIR)/src/portable/synopsys/dwc2/dwc2_common.c \
 $(TINYUSB_DIR)/src/portable/synopsys/dwc2/dcd_dwc2.c \
-$(LIBDAISY_DIR)/Middlewares/Third_Party/FatFs/src/option/unicode.c \
 $(LIBDAISY_DIR)/core/startup_stm32h750xx.c
+
+ifeq ($(USE_FATFS),1)
+C_SOURCES += \
+$(LIBDAISY_DIR)/Middlewares/Third_Party/FatFs/src/option/unicode.c
+endif
 
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o))) $(addprefix $(BUILD_DIR)/,$(notdir $(CPP_SOURCES:.cpp=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))

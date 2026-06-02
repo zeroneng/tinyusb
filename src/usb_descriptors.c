@@ -39,6 +39,7 @@ enum {
   STRID_AUDIO,
   STRID_MIC,
   STRID_CDC,
+  STRID_MIDI,
   STRID_HID,
 };
 
@@ -47,6 +48,8 @@ enum {
 #define EPNUM_CDC_NOTIF   0x83u
 #define EPNUM_CDC_OUT     0x04u
 #define EPNUM_CDC_IN      0x84u
+#define EPNUM_MIDI_OUT    0x06u
+#define EPNUM_MIDI_IN     0x86u
 #define EPNUM_HID_IN      0x85u
 
 static uint8_t const desc_hid_report[] =
@@ -88,7 +91,7 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
   return desc_hid_report;
 }
 
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_AUDIO20_GENERIC_HEADSET_DESC_LEN + TUD_CDC_DESC_LEN + TUD_HID_DESC_LEN)
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_AUDIO20_GENERIC_HEADSET_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MIDI_DESC_LEN + TUD_HID_DESC_LEN)
 
 static uint8_t desc_configuration[] =
 {
@@ -100,6 +103,8 @@ static uint8_t desc_configuration[] =
     EPNUM_AUDIO_IN),
 
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, CFG_TUD_CDC_RX_EPSIZE),
+
+  TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, STRID_MIDI, EPNUM_MIDI_OUT, EPNUM_MIDI_IN, CFG_TUD_MIDI_EP_BUFSIZE),
 
   TUD_HID_DESCRIPTOR(ITF_NUM_HID, STRID_HID, HID_ITF_PROTOCOL_NONE,
                      sizeof(desc_hid_report), EPNUM_HID_IN,
@@ -127,6 +132,7 @@ static char const *string_desc_arr[] =
   USB_STRING_AUDIO_SPEAKER,
   USB_STRING_AUDIO_MICROPHONE,
   USB_STRING_CDC,
+  USB_STRING_MIDI,
   USB_STRING_HID
 };
 

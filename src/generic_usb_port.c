@@ -5,6 +5,7 @@
 #include "generic_usb_audio.h"
 #include "generic_usb_cdc.h"
 #include "generic_usb_hid.h"
+#include "generic_usb_midi.h"
 
 #ifndef BOARD_TUD_RHPORT
 #define BOARD_TUD_RHPORT 0
@@ -56,6 +57,7 @@ void GenericUSB_Init(void)
 
   GenericUSB_AudioInit();
   GenericUSB_CDCInit();
+  GenericUSB_MIDIInit();
   GenericUSB_HIDInit();
 
   tud_configure_dwc2_t cfg = CFG_TUD_CONFIGURE_DWC2_DEFAULT;
@@ -74,6 +76,7 @@ void GenericUSB_Task(void)
   tud_task();
   GenericUSB_AudioTask();
   GenericUSB_CDCTask();
+  GenericUSB_MIDITask();
   GenericUSB_HIDTask();
 }
 

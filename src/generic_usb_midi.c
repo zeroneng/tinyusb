@@ -1,7 +1,10 @@
 #include "generic_usb_midi.h"
 
+#include <stdio.h>
+
 #include "tusb.h"
 #include "global.h"
+#include "generic_usb_cdc.h"
 #include "generic_usb_port.h"
 
 static uint32_t midi_rx_packets;
@@ -10,6 +13,25 @@ static uint32_t midi_dropped_packets;
 static uint32_t last_test_ms;
 static uint32_t next_test_ms;
 static bool test_note_is_on;
+
+#if DEBUG_TEST_MIDI
+static void midi_log_input_packet(uint8_t const packet[4])
+{
+  char line[40];
+  int const len = snprintf(line,
+                           sizeof(line),
+                           "MIDI IN: %02X %02X %02X %02X\r\n",
+                           packet[0],
+                           packet[1],
+                           packet[2],
+                           packet[3]);
+
+  if (len > 0) {
+    GenericUSB_CDC_Write((uint8_t const *)line, (uint32_t)len);
+    GenericUSB_CDC_Flush();
+  }
+}
+#endif
 
 void GenericUSB_MIDIInit(void)
 {
@@ -30,6 +52,10 @@ void GenericUSB_MIDITask(void)
 
     if (!tud_midi_packet_read(packet)) break;
     midi_rx_packets++;
+
+#if DEBUG_TEST_MIDI
+    midi_log_input_packet(packet);
+#endif
 
     if (tud_midi_packet_write(packet)) {
       midi_tx_packets++;

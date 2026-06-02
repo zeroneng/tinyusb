@@ -121,13 +121,13 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 static char const *string_desc_arr[] =
 {
   (const char[]) { 0x09, 0x04 },
-  g_usb_string_manufacturer,
-  g_usb_string_product,
-  g_usb_string_serial,
-  g_usb_string_audio_speaker,
-  g_usb_string_audio_microphone,
-  g_usb_string_cdc,
-  g_usb_string_hid
+  USB_STRING_MANUFACTURER,
+  USB_STRING_PRODUCT,
+  USB_STRING_SERIAL,
+  USB_STRING_AUDIO_SPEAKER,
+  USB_STRING_AUDIO_MICROPHONE,
+  USB_STRING_CDC,
+  USB_STRING_HID
 };
 
 static uint16_t desc_str[32 + 1];

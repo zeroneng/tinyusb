@@ -1,26 +1,16 @@
 #ifndef GLOBAL_H_
 #define GLOBAL_H_
 
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define USB_DEVICE_VID 0x0483u
 #define USB_DEVICE_PID 0x5787u
 #define USB_DEVICE_BCD 0x020bu
 
-extern char const g_usb_string_manufacturer[];
-extern char const g_usb_string_product[];
-extern char const g_usb_string_serial[];
-extern char const g_usb_string_audio_speaker[];
-extern char const g_usb_string_audio_microphone[];
-extern char const g_usb_string_cdc[];
-extern char const g_usb_string_hid[];
-
-#ifdef __cplusplus
-}
-#endif
+#define USB_STRING_MANUFACTURER     "Generic USB"
+#define USB_STRING_PRODUCT          "Generic USB UAC2 CDC NKRO"
+#define USB_STRING_SERIAL           "000001"
+#define USB_STRING_AUDIO_SPEAKER    "Generic USB Speakers"
+#define USB_STRING_AUDIO_MICROPHONE "Generic USB Stereo Microphone"
+#define USB_STRING_CDC              "Generic USB Serial"
+#define USB_STRING_HID              "Generic USB NKRO Keyboard"
 
 #endif /* GLOBAL_H_ */

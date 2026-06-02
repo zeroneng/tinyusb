@@ -47,6 +47,7 @@ C_INCLUDES = \
 -I$(TINYUSB_DIR)/src/device \
 -I$(TINYUSB_DIR)/src/class/audio \
 -I$(TINYUSB_DIR)/src/class/cdc \
+-I$(TINYUSB_DIR)/src/class/hid \
 -I$(TINYUSB_DIR)/src/portable/synopsys/dwc2
 
 CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) -include stm32h7xx.h -Ofast -Wall -Wno-missing-attributes -Wno-stringop-overflow -Wno-unused-variable -Wno-unused-function -fdata-sections -ffunction-sections -ffp-contract=fast -g -ggdb -MMD -MP -std=gnu11
@@ -58,6 +59,7 @@ C_SOURCES = \
 src/jammate_tinyusb_port.c \
 src/jammate_tinyusb_audio.c \
 src/jammate_tinyusb_cdc.c \
+src/jammate_tinyusb_hid.c \
 src/usb_descriptors.c \
 src/usbd_control.c \
 $(TINYUSB_DIR)/src/tusb.c \
@@ -65,6 +67,7 @@ $(TINYUSB_DIR)/src/common/tusb_fifo.c \
 $(TINYUSB_DIR)/src/device/usbd.c \
 $(TINYUSB_DIR)/src/class/audio/audio_device.c \
 $(TINYUSB_DIR)/src/class/cdc/cdc_device.c \
+$(TINYUSB_DIR)/src/class/hid/hid_device.c \
 $(TINYUSB_DIR)/src/portable/synopsys/dwc2/dwc2_common.c \
 $(TINYUSB_DIR)/src/portable/synopsys/dwc2/dcd_dwc2.c \
 $(LIBDAISY_DIR)/core/startup_stm32h750xx.c

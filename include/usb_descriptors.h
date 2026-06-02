@@ -14,6 +14,7 @@ enum {
     ITF_NUM_AUDIO_STREAMING_MIC,
     ITF_NUM_CDC,
     ITF_NUM_CDC_DATA,
+    ITF_NUM_HID,
     ITF_NUM_TOTAL
 };
 

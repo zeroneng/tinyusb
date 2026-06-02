@@ -4,6 +4,7 @@
 #include "tusb.h"
 #include "jammate_tinyusb_audio.h"
 #include "jammate_tinyusb_cdc.h"
+#include "jammate_tinyusb_hid.h"
 
 #ifndef BOARD_TUD_RHPORT
 #define BOARD_TUD_RHPORT 0
@@ -55,6 +56,7 @@ void JamMate_TinyUSB_Init(void)
 
   JamMate_TinyUSB_AudioInit();
   JamMate_TinyUSB_CDCInit();
+  JamMate_TinyUSB_HIDInit();
 
   tud_configure_dwc2_t cfg = CFG_TUD_CONFIGURE_DWC2_DEFAULT;
   cfg.vbus_sensing = false;
@@ -72,6 +74,7 @@ void JamMate_TinyUSB_Task(void)
   tud_task();
   JamMate_TinyUSB_AudioTask();
   JamMate_TinyUSB_CDCTask();
+  JamMate_TinyUSB_HIDTask();
 }
 
 void JamMate_TinyUSB_OTG_HS_IRQHandler(void)

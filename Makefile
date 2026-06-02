@@ -60,6 +60,7 @@ src/generic_usb_port.c \
 src/generic_usb_audio.c \
 src/generic_usb_cdc.c \
 src/generic_usb_hid.c \
+src/global.c \
 src/usb_descriptors.c \
 src/usbd_control.c \
 $(TINYUSB_DIR)/src/tusb.c \

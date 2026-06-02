@@ -18,10 +18,6 @@ enum {
     ITF_NUM_TOTAL
 };
 
-/* ── USB IDs ────────────────────────────────────────────────────────────── */
-#define USB_DEVICE_VID  0x0483u
-#define USB_DEVICE_PID  0x5787u
-
 /* ── Audio entity IDs ───────────────────────────────────────────────────── */
 #define UAC2_ENTITY_SPK_INPUT_TERMINAL   0x01u
 #define UAC2_ENTITY_SPK_FEATURE_UNIT     0x02u

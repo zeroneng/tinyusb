@@ -1,6 +1,7 @@
 #include <string.h>
 #include "tusb.h"
 #include "generic_usb_hid.h"
+#include "global.h"
 #include "usb_descriptors.h"
 
 static tusb_desc_device_t const desc_device =
@@ -16,7 +17,7 @@ static tusb_desc_device_t const desc_device =
 
   .idVendor           = USB_DEVICE_VID,
   .idProduct          = USB_DEVICE_PID,
-  .bcdDevice          = 0x020b,
+  .bcdDevice          = USB_DEVICE_BCD,
 
   .iManufacturer      = 0x01,
   .iProduct           = 0x02,
@@ -120,13 +121,13 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 static char const *string_desc_arr[] =
 {
   (const char[]) { 0x09, 0x04 },
-  "Generic USB",
-  "Generic USB UAC2 CDC NKRO",
-  "000001",
-  "Generic USB Speakers",
-  "Generic USB Stereo Microphone",
-  "Generic USB Serial",
-  "Generic USB NKRO Keyboard"
+  g_usb_string_manufacturer,
+  g_usb_string_product,
+  g_usb_string_serial,
+  g_usb_string_audio_speaker,
+  g_usb_string_audio_microphone,
+  g_usb_string_cdc,
+  g_usb_string_hid
 };
 
 static uint16_t desc_str[32 + 1];

@@ -56,10 +56,10 @@ LDFLAGS = $(MCU) --specs=nano.specs --specs=nosys.specs -u _printf_float -T$(LIB
 
 CPP_SOURCES = jm_main.cpp
 C_SOURCES = \
-src/jammate_tinyusb_port.c \
-src/jammate_tinyusb_audio.c \
-src/jammate_tinyusb_cdc.c \
-src/jammate_tinyusb_hid.c \
+src/generic_usb_port.c \
+src/generic_usb_audio.c \
+src/generic_usb_cdc.c \
+src/generic_usb_hid.c \
 src/usb_descriptors.c \
 src/usbd_control.c \
 $(TINYUSB_DIR)/src/tusb.c \

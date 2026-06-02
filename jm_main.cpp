@@ -1,8 +1,8 @@
 #include "daisy_seed.h"
-#include "jammate_tinyusb_port.h"
+#include "generic_usb_port.h"
 extern "C" {
-#include "jammate_tinyusb_audio.h"
-#include "jammate_tinyusb_cdc.h"
+#include "generic_usb_audio.h"
+#include "generic_usb_cdc.h"
 }
 
 using namespace daisy;
@@ -13,11 +13,11 @@ static void AudioCallback(AudioHandle::InputBuffer in,
                           AudioHandle::OutputBuffer out,
                           size_t size)
 {
-    int16_t mic[JAMMATE_AUDIO_FRAMES_PER_MS * JAMMATE_AUDIO_MIC_CHANNELS];
-    int16_t spk[JAMMATE_AUDIO_FRAMES_PER_MS * JAMMATE_AUDIO_SPK_CHANNELS];
+    int16_t mic[GENERIC_USB_AUDIO_FRAMES_PER_MS * GENERIC_USB_AUDIO_MIC_CHANNELS];
+    int16_t spk[GENERIC_USB_AUDIO_FRAMES_PER_MS * GENERIC_USB_AUDIO_SPK_CHANNELS];
 
-    const size_t frames = size > JAMMATE_AUDIO_FRAMES_PER_MS
-                            ? JAMMATE_AUDIO_FRAMES_PER_MS
+    const size_t frames = size > GENERIC_USB_AUDIO_FRAMES_PER_MS
+                            ? GENERIC_USB_AUDIO_FRAMES_PER_MS
                             : size;
 
     for(size_t i = 0; i < frames; i++)
@@ -52,7 +52,7 @@ int main(void)
     hw.SetAudioBlockSize(48);
     hw.StartAudio(AudioCallback);
 
-    JamMate_TinyUSB_Init();
+    GenericUSB_Init();
 
     uint32_t last = 0;
     bool led = false;
@@ -60,15 +60,15 @@ int main(void)
     while(1)
     {
         uint32_t now = System::GetNow();
-        JamMate_TinyUSB_Task();
+        GenericUSB_Task();
 
         if(now - last >= 250)
         {
             last = now;
             led = !led;
             hw.SetLed(led);
-            JamMate_CDC_WriteString(led ? "LED: ON\r\n" : "LED: OFF\r\n");
-            JamMate_CDC_Flush();
+            GenericUSB_CDC_WriteString(led ? "LED: ON\r\n" : "LED: OFF\r\n");
+            GenericUSB_CDC_Flush();
         }
     }    
 }

@@ -49,17 +49,15 @@ extern "C" {
 #define CFG_TUD_AUDIO   1
 #define CFG_TUD_VENDOR  0
 
-/* ── JamMate R6s: UAC2 + CDC ACM, Daisy Seed / STM32H7 full-speed ─────────
+/* ── Generic USB: UAC2 + CDC ACM, Daisy Seed / STM32H7 full-speed ─────────
  *
  *  Speaker OUT : stereo s16, 48 kHz, ADAPTIVE isochronous (no feedback EP)
  *  Mic    IN   : stereo s16, 48 kHz, ASYNCHRONOUS isochronous
  *  CDC         : standard ACM serial (debug / control)
  *
- *  R6 changes vs R5f
- *  ------------------
  *  FIX-1  All TinyUSB audio read/write calls moved out of the Daisy audio
  *         callback. AudioIF_PushSamples/PopSamples now use local FIFOs;
- *         JamMate_TinyUSB_AudioTask performs tud_audio_n_read/write in
+ *         GenericUSB_AudioTask performs tud_audio_n_read/write in
  *         main-loop context only.
  *
  *  FIX-2  EP_OUT_SW_BUF reduced from 48x to 8x EP size.
@@ -71,8 +69,8 @@ extern "C" {
  *
  *  CLEAN  Dead tud_audio_feedback_params_cb() removed (FEEDBACK_EP=0).
  *
- *  Everything else (descriptors, EP map, CDC, API, volume/mute, clock
- *  entity, all callback signatures) is identical to R5f.
+ *  Descriptor layout, EP map, CDC, API, volume/mute, clock entity, and
+ *  callback signatures are intentionally kept stable.
  * ────────────────────────────────────────────────────────────────────────*/
 
 #define CFG_TUD_AUDIO_ENABLE_INTERRUPT_EP               0
@@ -117,7 +115,7 @@ extern "C" {
 #define CFG_TUD_AUDIO_FUNC_1_EP_IN_SZ_MAX  CFG_TUD_AUDIO_FUNC_1_FORMAT_1_EP_SZ_IN
 #define CFG_TUD_AUDIO_FUNC_1_EP_OUT_SZ_MAX CFG_TUD_AUDIO_FUNC_1_FORMAT_1_EP_SZ_OUT
 
-/* FIX-2: 8x instead of R5f's 48x */
+/* 8x endpoint software buffer depth is enough with host-paced adaptive sync. */
 #define CFG_TUD_AUDIO_FUNC_1_EP_IN_SW_BUF_SZ  (12u * CFG_TUD_AUDIO_FUNC_1_FORMAT_1_EP_SZ_IN)
 #define CFG_TUD_AUDIO_FUNC_1_EP_OUT_SW_BUF_SZ  (8u * CFG_TUD_AUDIO_FUNC_1_FORMAT_1_EP_SZ_OUT)
 

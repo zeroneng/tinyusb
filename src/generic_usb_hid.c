@@ -1,4 +1,4 @@
-#include "jammate_tinyusb_hid.h"
+#include "generic_usb_hid.h"
 
 #include <string.h>
 #include "stm32h7xx_hal.h"
@@ -9,7 +9,7 @@ static uint32_t hid_key_presses = 0;
 static uint32_t last_key_ms = 0;
 static bool key_is_down = false;
 
-void JamMate_TinyUSB_HIDInit(void)
+void GenericUSB_HIDInit(void)
 {
     hid_in_reports = 0;
     hid_key_presses = 0;
@@ -17,7 +17,7 @@ void JamMate_TinyUSB_HIDInit(void)
     key_is_down = false;
 }
 
-void JamMate_TinyUSB_HIDTask(void)
+void GenericUSB_HIDTask(void)
 {
     uint32_t now = HAL_GetTick();
 
@@ -26,7 +26,7 @@ void JamMate_TinyUSB_HIDTask(void)
     if (!key_is_down) {
         if ((now - last_key_ms) < 1000u) return;
 
-        uint8_t report[JAMMATE_HID_REPORT_SIZE] = {0};
+        uint8_t report[GENERIC_USB_HID_REPORT_SIZE] = {0};
         report[1u + (HID_KEY_A / 8u)] = (uint8_t)(1u << (HID_KEY_A % 8u));
 
         if (tud_hid_report(0, report, sizeof(report))) {
@@ -36,7 +36,7 @@ void JamMate_TinyUSB_HIDTask(void)
             last_key_ms = now;
         }
     } else if ((now - last_key_ms) >= 40u) {
-        uint8_t report[JAMMATE_HID_REPORT_SIZE] = {0};
+        uint8_t report[GENERIC_USB_HID_REPORT_SIZE] = {0};
 
         if (tud_hid_report(0, report, sizeof(report))) {
             hid_in_reports++;
@@ -45,12 +45,12 @@ void JamMate_TinyUSB_HIDTask(void)
     }
 }
 
-uint32_t JamMate_HID_InputReports(void)
+uint32_t GenericUSB_HID_InputReports(void)
 {
     return hid_in_reports;
 }
 
-uint32_t JamMate_HID_KeyPresses(void)
+uint32_t GenericUSB_HID_KeyPresses(void)
 {
     return hid_key_presses;
 }

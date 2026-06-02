@@ -19,8 +19,8 @@ enum {
 };
 
 /* ── USB IDs ────────────────────────────────────────────────────────────── */
-#define JAMMATE_USB_VID  0x0483u
-#define JAMMATE_USB_PID  0x5787u
+#define USB_DEVICE_VID  0x0483u
+#define USB_DEVICE_PID  0x5787u
 
 /* ── Audio entity IDs ───────────────────────────────────────────────────── */
 #define UAC2_ENTITY_SPK_INPUT_TERMINAL   0x01u
@@ -32,12 +32,12 @@ enum {
 
 /* NON_PREDEFINED: maximum compatibility with older TinyUSB headers and
  * Windows usbaudio2.sys. A bad channel bitmap is a common Code 10 cause. */
-#ifndef JAMMATE_UAC2_CHANNEL_CONFIG_STEREO
-#define JAMMATE_UAC2_CHANNEL_CONFIG_STEREO  AUDIO20_CHANNEL_CONFIG_NON_PREDEFINED
+#ifndef USB_AUDIO_CHANNEL_CONFIG_STEREO
+#define USB_AUDIO_CHANNEL_CONFIG_STEREO  AUDIO20_CHANNEL_CONFIG_NON_PREDEFINED
 #endif
 
 /* ── Descriptor byte-length ─────────────────────────────────────────────── */
-#define TUD_AUDIO20_JAMMATE_HEADSET_DESC_LEN  (   \
+#define TUD_AUDIO20_GENERIC_HEADSET_DESC_LEN  (   \
     TUD_AUDIO20_DESC_IAD_LEN                      \
   + TUD_AUDIO20_DESC_STD_AC_LEN                   \
   + TUD_AUDIO20_DESC_CS_AC_LEN                    \
@@ -61,9 +61,9 @@ enum {
   + TUD_AUDIO20_DESC_CS_AS_ISO_EP_LEN)
 
 /* ── Audio descriptor macro ─────────────────────────────────────────────── */
-/*  Speaker OUT : ADAPTIVE isochronous  — identical to R5f
+/*  Speaker OUT : ADAPTIVE isochronous
  *  Mic    IN   : stereo ASYNCHRONOUS isochronous              */
-#define TUD_AUDIO20_JAMMATE_HEADSET_DESCRIPTOR(_stridx, _epout, _epin)        \
+#define TUD_AUDIO20_GENERIC_HEADSET_DESCRIPTOR(_stridx, _epout, _epin)        \
   TUD_AUDIO20_DESC_IAD(ITF_NUM_AUDIO_CONTROL, 3, 0x00),                       \
   TUD_AUDIO20_DESC_STD_AC(ITF_NUM_AUDIO_CONTROL, 0x00, _stridx),              \
   TUD_AUDIO20_DESC_CS_AC(0x0200, AUDIO20_FUNC_HEADSET,                        \
@@ -74,7 +74,7 @@ enum {
   TUD_AUDIO20_DESC_CLK_SRC(UAC2_ENTITY_CLOCK, 3, 7, 0x00, 0x00),             \
   TUD_AUDIO20_DESC_INPUT_TERM(UAC2_ENTITY_SPK_INPUT_TERMINAL,                 \
     AUDIO_TERM_TYPE_USB_STREAMING, 0x00, UAC2_ENTITY_CLOCK,                   \
-    0x02, JAMMATE_UAC2_CHANNEL_CONFIG_STEREO, 0x00, 0x0000, 0x00),            \
+    0x02, USB_AUDIO_CHANNEL_CONFIG_STEREO, 0x00, 0x0000, 0x00),            \
   TUD_AUDIO20_DESC_FEATURE_UNIT(UAC2_ENTITY_SPK_FEATURE_UNIT,                 \
     UAC2_ENTITY_SPK_INPUT_TERMINAL, 0x00,                                      \
     (AUDIO20_CTRL_RW << AUDIO20_FEATURE_UNIT_CTRL_MUTE_POS) |                 \
@@ -85,7 +85,7 @@ enum {
     UAC2_ENTITY_SPK_FEATURE_UNIT, UAC2_ENTITY_CLOCK, 0x0000, 0x00),           \
   TUD_AUDIO20_DESC_INPUT_TERM(UAC2_ENTITY_MIC_INPUT_TERMINAL,                 \
     AUDIO_TERM_TYPE_IN_GENERIC_MIC, 0x00, UAC2_ENTITY_CLOCK,                  \
-    0x02, JAMMATE_UAC2_CHANNEL_CONFIG_STEREO, 0x00, 0x0000, 0x00),         \
+    0x02, USB_AUDIO_CHANNEL_CONFIG_STEREO, 0x00, 0x0000, 0x00),         \
   TUD_AUDIO20_DESC_OUTPUT_TERM(UAC2_ENTITY_MIC_OUTPUT_TERMINAL,               \
     AUDIO_TERM_TYPE_USB_STREAMING, 0x00,                                       \
     UAC2_ENTITY_MIC_INPUT_TERMINAL, UAC2_ENTITY_CLOCK, 0x0000, 0x00),         \
@@ -94,7 +94,7 @@ enum {
   TUD_AUDIO20_DESC_CS_AS_INT(UAC2_ENTITY_SPK_INPUT_TERMINAL,                  \
     AUDIO20_CTRL_NONE, AUDIO20_FORMAT_TYPE_I, AUDIO20_DATA_FORMAT_TYPE_I_PCM, \
     CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_RX,                                        \
-    JAMMATE_UAC2_CHANNEL_CONFIG_STEREO, 0x00),                                 \
+    USB_AUDIO_CHANNEL_CONFIG_STEREO, 0x00),                                 \
   TUD_AUDIO20_DESC_TYPE_I_FORMAT(                                              \
     CFG_TUD_AUDIO_FUNC_1_FORMAT_1_N_BYTES_PER_SAMPLE_RX,                      \
     CFG_TUD_AUDIO_FUNC_1_FORMAT_1_RESOLUTION_RX),                              \
@@ -112,7 +112,7 @@ enum {
   TUD_AUDIO20_DESC_CS_AS_INT(UAC2_ENTITY_MIC_OUTPUT_TERMINAL,                 \
     AUDIO20_CTRL_NONE, AUDIO20_FORMAT_TYPE_I, AUDIO20_DATA_FORMAT_TYPE_I_PCM, \
     CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX,                                        \
-    JAMMATE_UAC2_CHANNEL_CONFIG_STEREO, 0x00),                              \
+    USB_AUDIO_CHANNEL_CONFIG_STEREO, 0x00),                              \
   TUD_AUDIO20_DESC_TYPE_I_FORMAT(                                              \
     CFG_TUD_AUDIO_FUNC_1_FORMAT_1_N_BYTES_PER_SAMPLE_TX,                      \
     CFG_TUD_AUDIO_FUNC_1_FORMAT_1_RESOLUTION_TX),                              \

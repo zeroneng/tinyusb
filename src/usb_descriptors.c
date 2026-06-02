@@ -1,6 +1,6 @@
 #include <string.h>
 #include "tusb.h"
-#include "jammate_tinyusb_hid.h"
+#include "generic_usb_hid.h"
 #include "usb_descriptors.h"
 
 static tusb_desc_device_t const desc_device =
@@ -14,8 +14,8 @@ static tusb_desc_device_t const desc_device =
   .bDeviceProtocol    = MISC_PROTOCOL_IAD,
   .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
 
-  .idVendor           = JAMMATE_USB_VID,
-  .idProduct          = JAMMATE_USB_PID,
+  .idVendor           = USB_DEVICE_VID,
+  .idProduct          = USB_DEVICE_PID,
   .bcdDevice          = 0x020b,
 
   .iManufacturer      = 0x01,
@@ -87,13 +87,13 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
   return desc_hid_report;
 }
 
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_AUDIO20_JAMMATE_HEADSET_DESC_LEN + TUD_CDC_DESC_LEN + TUD_HID_DESC_LEN)
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_AUDIO20_GENERIC_HEADSET_DESC_LEN + TUD_CDC_DESC_LEN + TUD_HID_DESC_LEN)
 
 static uint8_t desc_configuration[] =
 {
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, 0, 0x00, 100),
 
-  TUD_AUDIO20_JAMMATE_HEADSET_DESCRIPTOR(
+  TUD_AUDIO20_GENERIC_HEADSET_DESCRIPTOR(
     STRID_AUDIO,
     EPNUM_AUDIO_OUT,
     EPNUM_AUDIO_IN),
@@ -120,13 +120,13 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 static char const *string_desc_arr[] =
 {
   (const char[]) { 0x09, 0x04 },
-  "JamMate",
-  "JamMate UAC2 CDC NKRO",
+  "Generic USB",
+  "Generic USB UAC2 CDC NKRO",
   "000001",
-  "JamMate Speakers",
-  "JamMate Stereo Microphone",
-  "JamMate Serial",
-  "JamMate NKRO Keyboard"
+  "Generic USB Speakers",
+  "Generic USB Stereo Microphone",
+  "Generic USB Serial",
+  "Generic USB NKRO Keyboard"
 };
 
 static uint16_t desc_str[32 + 1];

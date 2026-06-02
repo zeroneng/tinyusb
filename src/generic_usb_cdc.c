@@ -1,22 +1,20 @@
-/* jammate_tinyusb_cdc.c — JamMate R6 CDC ACM wrapper
- *
- * Identical to R5f except banner string reads "R6".
+/* generic_usb_cdc.c — Generic USB CDC ACM wrapper
  *
  * 512-byte software RX ring:
  *   tud_cdc_rx_cb() pushes bytes immediately on TinyUSB task callback.
- *   JamMate_CDC_Read() drains the ring from any context.
- *   JamMate_TinyUSB_CDCTask() only flushes the TX FIFO.
+ *   GenericUSB_CDC_Read() drains the ring from any context.
+ *   GenericUSB_CDCTask() only flushes the TX FIFO.
  */
 
-#include "jammate_tinyusb_cdc.h"
+#include "generic_usb_cdc.h"
 
 #include <stdio.h>
 #include <string.h>
 #include "tusb.h"
 
-#define JAMMATE_CDC_RX_RING_SIZE  512u
+#define GENERIC_USB_CDC_RX_RING_SIZE  512u
 
-static uint8_t           rx_ring[JAMMATE_CDC_RX_RING_SIZE];
+static uint8_t           rx_ring[GENERIC_USB_CDC_RX_RING_SIZE];
 static volatile uint32_t rx_rd      = 0;
 static volatile uint32_t rx_wr      = 0;
 static volatile uint32_t rx_count   = 0;
@@ -31,45 +29,45 @@ static void rx_ring_reset(void)
 
 static void rx_ring_push(uint8_t b)
 {
-    if (rx_count >= JAMMATE_CDC_RX_RING_SIZE) {
+    if (rx_count >= GENERIC_USB_CDC_RX_RING_SIZE) {
         rx_dropped++;
         return;
     }
     rx_ring[rx_wr] = b;
-    rx_wr    = (rx_wr + 1u) % JAMMATE_CDC_RX_RING_SIZE;
+    rx_wr    = (rx_wr + 1u) % GENERIC_USB_CDC_RX_RING_SIZE;
     rx_count++;
     rx_bytes++;
 }
 
 /* ── Public init / task ─────────────────────────────────────────────────── */
-void JamMate_TinyUSB_CDCInit(void)
+void GenericUSB_CDCInit(void)
 {
     rx_ring_reset();
     rx_bytes = tx_bytes = rx_dropped = 0;
 }
 
-void JamMate_TinyUSB_CDCTask(void)
+void GenericUSB_CDCTask(void)
 {
     if (tud_cdc_connected()) tud_cdc_write_flush();
 }
 
 /* ── Public API ─────────────────────────────────────────────────────────── */
-bool JamMate_CDC_Connected(void) { return tud_cdc_connected(); }
-uint32_t JamMate_CDC_Available(void) { return rx_count; }
+bool GenericUSB_CDC_Connected(void) { return tud_cdc_connected(); }
+uint32_t GenericUSB_CDC_Available(void) { return rx_count; }
 
-uint32_t JamMate_CDC_Read(uint8_t *dst, uint32_t max_len)
+uint32_t GenericUSB_CDC_Read(uint8_t *dst, uint32_t max_len)
 {
     if (!dst || !max_len) return 0;
     uint32_t n = 0;
     while (n < max_len && rx_count > 0) {
         dst[n++] = rx_ring[rx_rd];
-        rx_rd    = (rx_rd + 1u) % JAMMATE_CDC_RX_RING_SIZE;
+        rx_rd    = (rx_rd + 1u) % GENERIC_USB_CDC_RX_RING_SIZE;
         rx_count--;
     }
     return n;
 }
 
-uint32_t JamMate_CDC_Write(const uint8_t *src, uint32_t len)
+uint32_t GenericUSB_CDC_Write(const uint8_t *src, uint32_t len)
 {
     if (!src || !len || !tud_cdc_connected()) return 0;
     uint32_t written  = tud_cdc_write(src, len);
@@ -77,7 +75,7 @@ uint32_t JamMate_CDC_Write(const uint8_t *src, uint32_t len)
     return written;
 }
 
-uint32_t JamMate_CDC_PrintFloat(const char *label, float value)
+uint32_t GenericUSB_CDC_PrintFloat(const char *label, float value)
 {
     char buf[96];
 
@@ -89,7 +87,7 @@ uint32_t JamMate_CDC_PrintFloat(const char *label, float value)
         if((uint32_t)n >= sizeof(buf))
             n = (int)sizeof(buf) - 1;
 
-        return JamMate_CDC_Write((const uint8_t *)buf, (uint32_t)n);
+        return GenericUSB_CDC_Write((const uint8_t *)buf, (uint32_t)n);
     }
     else
     {
@@ -99,11 +97,11 @@ uint32_t JamMate_CDC_PrintFloat(const char *label, float value)
         if((uint32_t)n >= sizeof(buf))
             n = (int)sizeof(buf) - 1;
 
-        return JamMate_CDC_Write((const uint8_t *)buf, (uint32_t)n);
+        return GenericUSB_CDC_Write((const uint8_t *)buf, (uint32_t)n);
     }
 }
 
-uint32_t JamMate_CDC_PrintFloatLn(const char *label, float value)
+uint32_t GenericUSB_CDC_PrintFloatLn(const char *label, float value)
 {
     char buf[100];
 
@@ -115,7 +113,7 @@ uint32_t JamMate_CDC_PrintFloatLn(const char *label, float value)
         if((uint32_t)n >= sizeof(buf))
             n = (int)sizeof(buf) - 1;
 
-        return JamMate_CDC_Write((const uint8_t *)buf, (uint32_t)n);
+        return GenericUSB_CDC_Write((const uint8_t *)buf, (uint32_t)n);
     }
     else
     {
@@ -125,28 +123,28 @@ uint32_t JamMate_CDC_PrintFloatLn(const char *label, float value)
         if((uint32_t)n >= sizeof(buf))
             n = (int)sizeof(buf) - 1;
 
-        return JamMate_CDC_Write((const uint8_t *)buf, (uint32_t)n);
+        return GenericUSB_CDC_Write((const uint8_t *)buf, (uint32_t)n);
     }
 }
 
-uint32_t JamMate_CDC_WriteString(const char *s)
+uint32_t GenericUSB_CDC_WriteString(const char *s)
 {
     if (!s) return 0;
-    return JamMate_CDC_Write((uint8_t const *)s, (uint32_t)strlen(s));
+    return GenericUSB_CDC_Write((uint8_t const *)s, (uint32_t)strlen(s));
 }
 
-void     JamMate_CDC_Flush(void)            { tud_cdc_write_flush(); }
-uint32_t JamMate_CDC_RxBytes(void)          { return rx_bytes;   }
-uint32_t JamMate_CDC_TxBytes(void)          { return tx_bytes;   }
-uint32_t JamMate_CDC_DroppedRxBytes(void)   { return rx_dropped; }
+void     GenericUSB_CDC_Flush(void)            { tud_cdc_write_flush(); }
+uint32_t GenericUSB_CDC_RxBytes(void)          { return rx_bytes;   }
+uint32_t GenericUSB_CDC_TxBytes(void)          { return tx_bytes;   }
+uint32_t GenericUSB_CDC_DroppedRxBytes(void)   { return rx_dropped; }
 
 /* ── TinyUSB CDC callbacks ──────────────────────────────────────────────── */
 void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
 {
     (void)itf; (void)rts;
     if (dtr) {
-        JamMate_CDC_WriteString("JamMate UAC2 CDC ready\r\n");
-        JamMate_CDC_Flush();
+        GenericUSB_CDC_WriteString("Generic USB UAC2 CDC ready\r\n");
+        GenericUSB_CDC_Flush();
     }
 }
 

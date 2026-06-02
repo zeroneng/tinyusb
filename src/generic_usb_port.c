@@ -1,16 +1,16 @@
-#include "jammate_tinyusb_port.h"
+#include "generic_usb_port.h"
 
 #include "stm32h7xx_hal.h"
 #include "tusb.h"
-#include "jammate_tinyusb_audio.h"
-#include "jammate_tinyusb_cdc.h"
-#include "jammate_tinyusb_hid.h"
+#include "generic_usb_audio.h"
+#include "generic_usb_cdc.h"
+#include "generic_usb_hid.h"
 
 #ifndef BOARD_TUD_RHPORT
 #define BOARD_TUD_RHPORT 0
 #endif
 
-static void jammate_usb_force_disconnect(void)
+static void generic_usb_force_disconnect(void)
 {
   GPIO_InitTypeDef gpio = {0};
 
@@ -25,7 +25,7 @@ static void jammate_usb_force_disconnect(void)
   HAL_Delay(25);
 }
 
-static void jammate_usb_gpio_init(void)
+static void generic_usb_gpio_init(void)
 {
   GPIO_InitTypeDef gpio = {0};
 
@@ -40,10 +40,10 @@ static void jammate_usb_gpio_init(void)
   HAL_GPIO_Init(GPIOB, &gpio);
 }
 
-void JamMate_TinyUSB_Init(void)
+void GenericUSB_Init(void)
 {
-  jammate_usb_force_disconnect();
-  jammate_usb_gpio_init();
+  generic_usb_force_disconnect();
+  generic_usb_gpio_init();
 
   __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
 
@@ -54,9 +54,9 @@ void JamMate_TinyUSB_Init(void)
   HAL_NVIC_SetPriority(OTG_HS_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
 
-  JamMate_TinyUSB_AudioInit();
-  JamMate_TinyUSB_CDCInit();
-  JamMate_TinyUSB_HIDInit();
+  GenericUSB_AudioInit();
+  GenericUSB_CDCInit();
+  GenericUSB_HIDInit();
 
   tud_configure_dwc2_t cfg = CFG_TUD_CONFIGURE_DWC2_DEFAULT;
   cfg.vbus_sensing = false;
@@ -69,35 +69,35 @@ void JamMate_TinyUSB_Init(void)
   tusb_init(BOARD_TUD_RHPORT, &dev_init);
 }
 
-void JamMate_TinyUSB_Task(void)
+void GenericUSB_Task(void)
 {
   tud_task();
-  JamMate_TinyUSB_AudioTask();
-  JamMate_TinyUSB_CDCTask();
-  JamMate_TinyUSB_HIDTask();
+  GenericUSB_AudioTask();
+  GenericUSB_CDCTask();
+  GenericUSB_HIDTask();
 }
 
-void JamMate_TinyUSB_OTG_HS_IRQHandler(void)
+void GenericUSB_OTG_HS_IRQHandler(void)
 {
   tud_int_handler(BOARD_TUD_RHPORT);
 }
 
 void OTG_HS_IRQHandler(void)
 {
-  JamMate_TinyUSB_OTG_HS_IRQHandler();
+  GenericUSB_OTG_HS_IRQHandler();
 }
 
 void OTG_HS_EP1_IN_IRQHandler(void)
 {
-  JamMate_TinyUSB_OTG_HS_IRQHandler();
+  GenericUSB_OTG_HS_IRQHandler();
 }
 
 void OTG_HS_EP1_OUT_IRQHandler(void)
 {
-  JamMate_TinyUSB_OTG_HS_IRQHandler();
+  GenericUSB_OTG_HS_IRQHandler();
 }
 
 void OTG_HS_WKUP_IRQHandler(void)
 {
-  JamMate_TinyUSB_OTG_HS_IRQHandler();
+  GenericUSB_OTG_HS_IRQHandler();
 }

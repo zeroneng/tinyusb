@@ -8,7 +8,8 @@
 extern "C" {
 #endif
 
-#define JAMMATE_HID_REPORT_SIZE 8u
+#define JAMMATE_HID_NKRO_BYTES 13u
+#define JAMMATE_HID_REPORT_SIZE (1u + JAMMATE_HID_NKRO_BYTES)
 
 void JamMate_TinyUSB_HIDInit(void);
 void JamMate_TinyUSB_HIDTask(void);

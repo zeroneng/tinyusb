@@ -16,7 +16,7 @@ static tusb_desc_device_t const desc_device =
 
   .idVendor           = JAMMATE_USB_VID,
   .idProduct          = JAMMATE_USB_PID,
-  .bcdDevice          = 0x020a,
+  .bcdDevice          = 0x020b,
 
   .iManufacturer      = 0x01,
   .iProduct           = 0x02,
@@ -50,7 +50,35 @@ enum {
 
 static uint8_t const desc_hid_report[] =
 {
-  TUD_HID_REPORT_DESC_KEYBOARD()
+  HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),
+  HID_USAGE(HID_USAGE_DESKTOP_KEYBOARD),
+  HID_COLLECTION(HID_COLLECTION_APPLICATION),
+    HID_USAGE_PAGE(HID_USAGE_PAGE_KEYBOARD),
+    HID_USAGE_MIN(224),
+    HID_USAGE_MAX(231),
+    HID_LOGICAL_MIN(0),
+    HID_LOGICAL_MAX(1),
+    HID_REPORT_SIZE(1),
+    HID_REPORT_COUNT(8),
+    HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),
+
+    HID_USAGE_PAGE(HID_USAGE_PAGE_LED),
+    HID_USAGE_MIN(1),
+    HID_USAGE_MAX(5),
+    HID_REPORT_SIZE(1),
+    HID_REPORT_COUNT(5),
+    HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),
+    HID_REPORT_SIZE(3),
+    HID_REPORT_COUNT(1),
+    HID_OUTPUT(HID_CONSTANT),
+
+    HID_USAGE_PAGE(HID_USAGE_PAGE_KEYBOARD),
+    HID_USAGE_MIN(0),
+    HID_USAGE_MAX(103),
+    HID_REPORT_SIZE(1),
+    HID_REPORT_COUNT(104),
+    HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),
+  HID_COLLECTION_END
 };
 
 uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
@@ -72,7 +100,7 @@ static uint8_t desc_configuration[] =
 
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, CFG_TUD_CDC_RX_EPSIZE),
 
-  TUD_HID_DESCRIPTOR(ITF_NUM_HID, STRID_HID, HID_ITF_PROTOCOL_KEYBOARD,
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, STRID_HID, HID_ITF_PROTOCOL_NONE,
                      sizeof(desc_hid_report), EPNUM_HID_IN,
                      CFG_TUD_HID_EP_BUFSIZE, 10)
 };
@@ -93,12 +121,12 @@ static char const *string_desc_arr[] =
 {
   (const char[]) { 0x09, 0x04 },
   "JamMate",
-  "JamMate UAC2 CDC Keyboard",
+  "JamMate UAC2 CDC NKRO",
   "000001",
   "JamMate Speakers",
   "JamMate Stereo Microphone",
   "JamMate Serial",
-  "JamMate Keyboard"
+  "JamMate NKRO Keyboard"
 };
 
 static uint16_t desc_str[32 + 1];

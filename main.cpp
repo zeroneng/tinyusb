@@ -1,6 +1,7 @@
 #include "daisy_seed.h"
 #include "generic_usb_port.h"
 extern "C" {
+#include "global.h"
 #include "generic_usb_audio.h"
 #include "generic_usb_cdc.h"
 }
@@ -60,6 +61,7 @@ int main(void)
     while(1)
     {
         uint32_t now = System::GetNow();
+        GenericUSB_SetNowMs(now);
         GenericUSB_Task();
 
         if(now - last >= 250)
@@ -67,8 +69,10 @@ int main(void)
             last = now;
             led = !led;
             hw.SetLed(led);
+#if DEBUG_TEST_CDC
             GenericUSB_CDC_WriteString(led ? "LED: ON\r\n" : "LED: OFF\r\n");
             GenericUSB_CDC_Flush();
+#endif
         }
     }    
 }

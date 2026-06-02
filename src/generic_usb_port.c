@@ -11,6 +11,8 @@
 #define BOARD_TUD_RHPORT 0
 #endif
 
+static uint32_t generic_usb_now_ms;
+
 static void generic_usb_force_disconnect(void)
 {
   GPIO_InitTypeDef gpio = {0};
@@ -43,6 +45,8 @@ static void generic_usb_gpio_init(void)
 
 void GenericUSB_Init(void)
 {
+  generic_usb_now_ms = 0;
+
   generic_usb_force_disconnect();
   generic_usb_gpio_init();
 
@@ -69,6 +73,16 @@ void GenericUSB_Init(void)
     .speed = TUSB_SPEED_FULL
   };
   tusb_init(BOARD_TUD_RHPORT, &dev_init);
+}
+
+void GenericUSB_SetNowMs(uint32_t now_ms)
+{
+  generic_usb_now_ms = now_ms;
+}
+
+uint32_t GenericUSB_NowMs(void)
+{
+  return generic_usb_now_ms;
 }
 
 void GenericUSB_Task(void)

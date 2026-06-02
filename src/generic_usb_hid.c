@@ -1,8 +1,9 @@
 #include "generic_usb_hid.h"
 
 #include <string.h>
-#include "stm32h7xx_hal.h"
 #include "tusb.h"
+#include "global.h"
+#include "generic_usb_port.h"
 
 static uint32_t hid_in_reports = 0;
 static uint32_t hid_key_presses = 0;
@@ -19,7 +20,8 @@ void GenericUSB_HIDInit(void)
 
 void GenericUSB_HIDTask(void)
 {
-    uint32_t now = HAL_GetTick();
+#if DEBUG_TEST_HID
+    uint32_t now = GenericUSB_NowMs();
 
     if (!tud_hid_ready()) return;
 
@@ -43,6 +45,16 @@ void GenericUSB_HIDTask(void)
             key_is_down = false;
         }
     }
+#else
+    if (key_is_down && tud_hid_ready()) {
+        uint8_t report[GENERIC_USB_HID_REPORT_SIZE] = {0};
+
+        if (tud_hid_report(0, report, sizeof(report))) {
+            hid_in_reports++;
+            key_is_down = false;
+        }
+    }
+#endif
 }
 
 uint32_t GenericUSB_HID_InputReports(void)

@@ -14,4 +14,8 @@
 #define USB_STRING_MIDI             "Generic USB MIDI"
 #define USB_STRING_HID              "Generic USB NKRO Keyboard"
 
+#define DEBUG_TEST_CDC  1
+#define DEBUG_TEST_HID  1
+#define DEBUG_TEST_MIDI 1
+
 #endif /* GLOBAL_H_ */

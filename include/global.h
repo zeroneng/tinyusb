@@ -17,5 +17,6 @@
 #define DEBUG_TEST_CDC  1
 #define DEBUG_TEST_HID  1
 #define DEBUG_TEST_MIDI 1
+#define DEBUG_TEST_SD   1
 
 #endif /* GLOBAL_H_ */

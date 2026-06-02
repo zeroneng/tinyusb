@@ -4,6 +4,7 @@ extern "C" {
 #include "global.h"
 #include "generic_usb_audio.h"
 #include "generic_usb_cdc.h"
+#include "generic_usb_sd.h"
 }
 
 using namespace daisy;
@@ -54,6 +55,7 @@ int main(void)
     hw.StartAudio(AudioCallback);
 
     GenericUSB_Init();
+    GenericUSB_SDInit();
 
     uint32_t last = 0;
     bool led = false;
@@ -63,6 +65,7 @@ int main(void)
         uint32_t now = System::GetNow();
         GenericUSB_SetNowMs(now);
         GenericUSB_Task();
+        GenericUSB_SDTask();
 
         if(now - last >= 250)
         {

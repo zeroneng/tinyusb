@@ -55,7 +55,9 @@ CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) -include stm32h7xx.h -Ofast -Wall -Wno-m
 CPPFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti -fno-unwind-tables -fshort-enums -Wno-register -std=gnu++20
 LDFLAGS = $(MCU) --specs=nano.specs --specs=nosys.specs -u _printf_float -T$(LIBDAISY_DIR)/core/STM32H750IB_flash.lds -L$(LIBDAISY_DIR)/build -ldaisy -lc -lm -lnosys -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -Wl,--print-memory-usage -Wl,--allow-multiple-definition
 
-CPP_SOURCES = main.cpp
+CPP_SOURCES = \
+main.cpp \
+src/generic_usb_sd.cpp
 C_SOURCES = \
 src/generic_usb_port.c \
 src/generic_usb_audio.c \
@@ -73,6 +75,7 @@ $(TINYUSB_DIR)/src/class/hid/hid_device.c \
 $(TINYUSB_DIR)/src/class/midi/midi_device.c \
 $(TINYUSB_DIR)/src/portable/synopsys/dwc2/dwc2_common.c \
 $(TINYUSB_DIR)/src/portable/synopsys/dwc2/dcd_dwc2.c \
+$(LIBDAISY_DIR)/Middlewares/Third_Party/FatFs/src/option/unicode.c \
 $(LIBDAISY_DIR)/core/startup_stm32h750xx.c
 
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o))) $(addprefix $(BUILD_DIR)/,$(notdir $(CPP_SOURCES:.cpp=.o)))

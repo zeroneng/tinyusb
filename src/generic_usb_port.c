@@ -6,6 +6,7 @@
 #include "generic_usb_cdc.h"
 #include "generic_usb_hid.h"
 #include "generic_usb_midi.h"
+#include "generic_usb_msc.h"
 
 #ifndef BOARD_TUD_RHPORT
 #define BOARD_TUD_RHPORT 0
@@ -63,6 +64,7 @@ void GenericUSB_Init(void)
   GenericUSB_CDCInit();
   GenericUSB_MIDIInit();
   GenericUSB_HIDInit();
+  GenericUSB_MSCInit();
 
   tud_configure_dwc2_t cfg = CFG_TUD_CONFIGURE_DWC2_DEFAULT;
   cfg.vbus_sensing = false;

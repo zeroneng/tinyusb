@@ -62,13 +62,13 @@ LDFLAGS = $(MCU) --specs=nano.specs --specs=nosys.specs -u _printf_float -T$(LIB
 
 CPP_SOURCES = \
 main.cpp \
-src/generic_usb_sd.cpp
+src/generic_usb_sd.cpp \
+src/generic_usb_msc.cpp
 C_SOURCES = \
 src/generic_usb_port.c \
 src/generic_usb_audio.c \
 src/generic_usb_cdc.c \
 src/generic_usb_hid.c \
-src/generic_usb_msc.c \
 src/generic_usb_midi.c \
 src/usb_descriptors.c \
 src/usbd_control.c \

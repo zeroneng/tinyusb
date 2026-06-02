@@ -13,7 +13,7 @@
 #define USB_STRING_CDC              "Generic USB Serial"
 #define USB_STRING_MIDI             "Generic USB MIDI"
 #define USB_STRING_HID              "Generic USB NKRO Keyboard"
-#define USB_STRING_MSC              "Generic USB RAM Disk"
+#define USB_STRING_MSC              "Generic USB SD Card"
 
 #define DEBUG_TEST_CDC  1
 #define DEBUG_TEST_HID  1

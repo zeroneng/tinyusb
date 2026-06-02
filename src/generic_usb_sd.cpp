@@ -23,7 +23,6 @@ static SdmmcHandler sdmmc;
 static FatFSInterface fatfs;
 static bool sd_mount_attempted;
 static bool sd_mounted;
-static bool sd_using_1bit;
 static uint32_t sd_next_check_ms;
 static uint32_t sd_check_count;
 static uint8_t sd_sector[512] __attribute__((aligned(32)));
@@ -242,18 +241,24 @@ static void sd_log_path(void)
     }
 }
 
-static void sd_init_bus(SdmmcHandler::BusWidth width)
+static void sd_init_bus(void)
 {
     SdmmcHandler::Config sd_cfg;
     sd_cfg.Defaults();
-    sd_cfg.width = width;
-    sd_cfg.speed = SdmmcHandler::Speed::STANDARD;
     sdmmc.Init(sd_cfg);
 }
 
-static FRESULT sd_mount_once_with_width(SdmmcHandler::BusWidth width)
+static FRESULT sd_mount_once_default(void)
 {
-    sd_init_bus(width);
+    sd_init_bus();
+
+    if(fatfs.Init(FatFSInterface::Config::MEDIA_SD) != FatFSInterface::Result::OK)
+    {
+        sd_log("SD INIT FAIL: FatFS link\r\n");
+        return FR_NOT_ENABLED;
+    }
+
+    sd_log_path();
     return f_mount(&fatfs.GetSDFileSystem(), "/", 1);
 }
 
@@ -261,35 +266,15 @@ static void sd_mount_once(void)
 {
     sd_mount_attempted = true;
 
-    if(fatfs.Init(FatFSInterface::Config::MEDIA_SD) != FatFSInterface::Result::OK)
-    {
-        sd_log("SD INIT FAIL: FatFS link\r\n");
-        return;
-    }
-
-    sd_log_path();
-
-    FRESULT res = sd_mount_once_with_width(SdmmcHandler::BusWidth::BITS_4);
+    FRESULT res = sd_mount_once_default();
     if(res == FR_OK)
     {
         sd_mounted = true;
-        sd_using_1bit = false;
-        sd_log("SD MOUNT OK: 4-bit\r\n");
+        sd_log("SD MOUNT OK\r\n");
         return;
     }
 
-    sd_log_fresult("SD MOUNT 4-bit FAIL: ", res);
-
-    res = sd_mount_once_with_width(SdmmcHandler::BusWidth::BITS_1);
-    if(res == FR_OK)
-    {
-        sd_mounted = true;
-        sd_using_1bit = true;
-        sd_log("SD MOUNT OK: 1-bit\r\n");
-        return;
-    }
-
-    sd_log_fresult("SD MOUNT 1-bit FAIL: ", res);
+    sd_log_fresult("SD MOUNT FAIL: ", res);
     sd_log_card_info();
     sd_log_raw_layout();
 }
@@ -348,9 +333,8 @@ static void sd_check_file(void)
     char line[64];
     int const len = snprintf(line,
                              sizeof(line),
-                             "SD CHECK OK: %lu %s\r\n",
-                             static_cast<unsigned long>(sd_check_count),
-                             sd_using_1bit ? "1-bit" : "4-bit");
+                             "SD CHECK OK: %lu\r\n",
+                             static_cast<unsigned long>(sd_check_count));
     if(len > 0)
     {
         sd_write(reinterpret_cast<uint8_t const *>(line),
@@ -365,7 +349,6 @@ void GenericUSB_SDInit(void)
 #if DEBUG_TEST_SD
     sd_mount_attempted = false;
     sd_mounted = false;
-    sd_using_1bit = false;
     sd_next_check_ms = 0;
     sd_check_count = 0;
 #endif

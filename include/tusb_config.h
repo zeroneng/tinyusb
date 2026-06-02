@@ -43,7 +43,7 @@ extern "C" {
 
 /* Class enables */
 #define CFG_TUD_CDC     1
-#define CFG_TUD_MSC     0
+#define CFG_TUD_MSC     1
 #define CFG_TUD_HID     1
 #define CFG_TUD_MIDI    1
 #define CFG_TUD_AUDIO   1
@@ -137,6 +137,9 @@ extern "C" {
 #define CFG_TUD_MIDI_RX_BUFSIZE  64
 #define CFG_TUD_MIDI_TX_BUFSIZE  64
 #define CFG_TUD_MIDI_EP_BUFSIZE  64
+
+/* MSC */
+#define CFG_TUD_MSC_EP_BUFSIZE   512
 
 #ifdef __cplusplus
 }

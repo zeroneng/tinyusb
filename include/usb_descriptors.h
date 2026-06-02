@@ -17,6 +17,7 @@ enum {
     ITF_NUM_MIDI_CONTROL,
     ITF_NUM_MIDI_STREAMING,
     ITF_NUM_HID,
+    ITF_NUM_MSC,
     ITF_NUM_TOTAL
 };
 

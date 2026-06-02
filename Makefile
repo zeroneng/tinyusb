@@ -3,7 +3,7 @@ TARGET = bypass
 LIBDAISY_DIR ?= ../../libDaisy
 TINYUSB_DIR ?= Middlewares/tinyusb
 BUILD_DIR = build
-USE_FATFS = 1
+USE_FATFS = 0
 
 CC = arm-none-eabi-gcc
 CXX = arm-none-eabi-g++
@@ -52,6 +52,7 @@ C_INCLUDES = \
 -I$(TINYUSB_DIR)/src/class/audio \
 -I$(TINYUSB_DIR)/src/class/cdc \
 -I$(TINYUSB_DIR)/src/class/hid \
+-I$(TINYUSB_DIR)/src/class/msc \
 -I$(TINYUSB_DIR)/src/class/midi \
 -I$(TINYUSB_DIR)/src/portable/synopsys/dwc2
 
@@ -67,6 +68,7 @@ src/generic_usb_port.c \
 src/generic_usb_audio.c \
 src/generic_usb_cdc.c \
 src/generic_usb_hid.c \
+src/generic_usb_msc.c \
 src/generic_usb_midi.c \
 src/usb_descriptors.c \
 src/usbd_control.c \
@@ -76,6 +78,7 @@ $(TINYUSB_DIR)/src/device/usbd.c \
 $(TINYUSB_DIR)/src/class/audio/audio_device.c \
 $(TINYUSB_DIR)/src/class/cdc/cdc_device.c \
 $(TINYUSB_DIR)/src/class/hid/hid_device.c \
+$(TINYUSB_DIR)/src/class/msc/msc_device.c \
 $(TINYUSB_DIR)/src/class/midi/midi_device.c \
 $(TINYUSB_DIR)/src/portable/synopsys/dwc2/dwc2_common.c \
 $(TINYUSB_DIR)/src/portable/synopsys/dwc2/dcd_dwc2.c \

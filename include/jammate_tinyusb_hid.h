@@ -8,13 +8,13 @@
 extern "C" {
 #endif
 
-#define JAMMATE_HID_REPORT_SIZE 64u
+#define JAMMATE_HID_REPORT_SIZE 8u
 
 void JamMate_TinyUSB_HIDInit(void);
 void JamMate_TinyUSB_HIDTask(void);
 
 uint32_t JamMate_HID_InputReports(void);
-uint32_t JamMate_HID_OutputReports(void);
+uint32_t JamMate_HID_KeyPresses(void);
 
 #ifdef __cplusplus
 }

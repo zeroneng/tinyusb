@@ -16,7 +16,7 @@ static tusb_desc_device_t const desc_device =
 
   .idVendor           = JAMMATE_USB_VID,
   .idProduct          = JAMMATE_USB_PID,
-  .bcdDevice          = 0x0209,
+  .bcdDevice          = 0x020a,
 
   .iManufacturer      = 0x01,
   .iProduct           = 0x02,
@@ -46,12 +46,11 @@ enum {
 #define EPNUM_CDC_NOTIF   0x83u
 #define EPNUM_CDC_OUT     0x04u
 #define EPNUM_CDC_IN      0x84u
-#define EPNUM_HID_OUT     0x05u
 #define EPNUM_HID_IN      0x85u
 
 static uint8_t const desc_hid_report[] =
 {
-  TUD_HID_REPORT_DESC_GENERIC_INOUT(JAMMATE_HID_REPORT_SIZE)
+  TUD_HID_REPORT_DESC_KEYBOARD()
 };
 
 uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
@@ -60,7 +59,7 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
   return desc_hid_report;
 }
 
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_AUDIO20_JAMMATE_HEADSET_DESC_LEN + TUD_CDC_DESC_LEN + TUD_HID_INOUT_DESC_LEN)
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_AUDIO20_JAMMATE_HEADSET_DESC_LEN + TUD_CDC_DESC_LEN + TUD_HID_DESC_LEN)
 
 static uint8_t desc_configuration[] =
 {
@@ -73,9 +72,9 @@ static uint8_t desc_configuration[] =
 
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, CFG_TUD_CDC_RX_EPSIZE),
 
-  TUD_HID_INOUT_DESCRIPTOR(ITF_NUM_HID, STRID_HID, HID_ITF_PROTOCOL_NONE,
-                           sizeof(desc_hid_report), EPNUM_HID_OUT, EPNUM_HID_IN,
-                           CFG_TUD_HID_EP_BUFSIZE, 10)
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, STRID_HID, HID_ITF_PROTOCOL_KEYBOARD,
+                     sizeof(desc_hid_report), EPNUM_HID_IN,
+                     CFG_TUD_HID_EP_BUFSIZE, 10)
 };
 
 
@@ -94,12 +93,12 @@ static char const *string_desc_arr[] =
 {
   (const char[]) { 0x09, 0x04 },
   "JamMate",
-  "JamMate UAC2 CDC HID",
+  "JamMate UAC2 CDC Keyboard",
   "000001",
   "JamMate Speakers",
   "JamMate Stereo Microphone",
   "JamMate Serial",
-  "JamMate HID"
+  "JamMate Keyboard"
 };
 
 static uint16_t desc_str[32 + 1];

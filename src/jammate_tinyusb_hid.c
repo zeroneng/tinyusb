@@ -5,16 +5,16 @@
 #include "tusb.h"
 
 static uint32_t hid_in_reports = 0;
-static uint32_t hid_out_reports = 0;
-static uint32_t last_report_ms = 0;
-static uint8_t last_out_report[JAMMATE_HID_REPORT_SIZE];
+static uint32_t hid_key_presses = 0;
+static uint32_t last_key_ms = 0;
+static bool key_is_down = false;
 
 void JamMate_TinyUSB_HIDInit(void)
 {
     hid_in_reports = 0;
-    hid_out_reports = 0;
-    last_report_ms = 0;
-    memset(last_out_report, 0, sizeof(last_out_report));
+    hid_key_presses = 0;
+    last_key_ms = 0;
+    key_is_down = false;
 }
 
 void JamMate_TinyUSB_HIDTask(void)
@@ -22,23 +22,22 @@ void JamMate_TinyUSB_HIDTask(void)
     uint32_t now = HAL_GetTick();
 
     if (!tud_hid_ready()) return;
-    if ((now - last_report_ms) < 100u) return;
 
-    uint8_t report[JAMMATE_HID_REPORT_SIZE] = {0};
-    report[0] = 'J';
-    report[1] = 'M';
-    report[2] = 'H';
-    report[3] = 'I';
-    report[4] = (uint8_t)(hid_in_reports & 0xffu);
-    report[5] = (uint8_t)((hid_in_reports >> 8) & 0xffu);
-    report[6] = (uint8_t)(now & 0xffu);
-    report[7] = (uint8_t)((now >> 8) & 0xffu);
-    report[8] = (uint8_t)(hid_out_reports & 0xffu);
-    report[9] = (uint8_t)((hid_out_reports >> 8) & 0xffu);
+    if (!key_is_down) {
+        if ((now - last_key_ms) < 1000u) return;
 
-    if (tud_hid_report(0, report, sizeof(report))) {
-        hid_in_reports++;
-        last_report_ms = now;
+        uint8_t keycode[6] = { HID_KEY_A, 0, 0, 0, 0, 0 };
+        if (tud_hid_keyboard_report(0, 0, keycode)) {
+            hid_in_reports++;
+            hid_key_presses++;
+            key_is_down = true;
+            last_key_ms = now;
+        }
+    } else if ((now - last_key_ms) >= 40u) {
+        if (tud_hid_keyboard_report(0, 0, NULL)) {
+            hid_in_reports++;
+            key_is_down = false;
+        }
     }
 }
 
@@ -47,9 +46,9 @@ uint32_t JamMate_HID_InputReports(void)
     return hid_in_reports;
 }
 
-uint32_t JamMate_HID_OutputReports(void)
+uint32_t JamMate_HID_KeyPresses(void)
 {
-    return hid_out_reports;
+    return hid_key_presses;
 }
 
 uint16_t tud_hid_get_report_cb(uint8_t instance,
@@ -62,17 +61,9 @@ uint16_t tud_hid_get_report_cb(uint8_t instance,
     (void)report_id;
     (void)report_type;
 
-    uint16_t const len = (reqlen < JAMMATE_HID_REPORT_SIZE)
-                       ? reqlen
-                       : JAMMATE_HID_REPORT_SIZE;
-    memset(buffer, 0, len);
-    if (len >= 4u) {
-        buffer[0] = 'J';
-        buffer[1] = 'M';
-        buffer[2] = 'H';
-        buffer[3] = 'G';
-    }
-    return len;
+    (void)buffer;
+    (void)reqlen;
+    return 0;
 }
 
 void tud_hid_set_report_cb(uint8_t instance,
@@ -85,10 +76,6 @@ void tud_hid_set_report_cb(uint8_t instance,
     (void)report_id;
     (void)report_type;
 
-    uint16_t const len = (bufsize < JAMMATE_HID_REPORT_SIZE)
-                       ? bufsize
-                       : JAMMATE_HID_REPORT_SIZE;
-    memset(last_out_report, 0, sizeof(last_out_report));
-    memcpy(last_out_report, buffer, len);
-    hid_out_reports++;
+    (void)buffer;
+    (void)bufsize;
 }

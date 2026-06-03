@@ -330,6 +330,16 @@ are allowed.
 Do not disable MSC while the host has the disk mounted or is writing. Ask the
 host to eject/unmount first, then disable it.
 
+The MSC backend also handles SD media state changes conservatively:
+
+- host eject/start-stop clears the cached SD-ready state
+- SD read/write failures clear the cached SD-ready state
+- failed SD init is retried once per second while the host keeps polling
+- when media state changes, the next host readiness check reports unit attention
+
+The host still owns the filesystem mount. Firmware exposes or withholds the
+block device media; the computer decides when to mount it again.
+
 ## Build And Flash
 
 From this project:

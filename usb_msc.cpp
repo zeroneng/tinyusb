@@ -18,12 +18,15 @@ using namespace daisy;
 enum {
     kBlockSize = 512,
     kSdTransferTimeoutMs = 1000,
+    kSdInitRetryDelayMs = 1000,
 };
 
 static SdmmcHandler sdmmc;
 static bool         msc_enabled = true;
 static bool         sd_ready;
 static bool         sd_init_attempted;
+static bool         sd_media_changed;
+static uint32_t     sd_next_init_ms;
 static uint32_t     sd_block_count;
 static uint16_t     sd_block_size = kBlockSize;
 /* Scratch sector for partial-sector MSC transfers. Keep it in libDaisy's
@@ -36,6 +39,13 @@ static uint8_t last_sd_result = MSD_OK;
 static uint8_t last_sd_state  = SD_TRANSFER_OK;
 
 static bool ensure_sd_ready(void);
+static void sd_mark_not_ready(void);
+static bool sd_card_detected(void);
+
+static bool sd_card_detected(void)
+{
+    return BSP_SD_IsDetected() == SD_PRESENT;
+}
 
 static bool sd_read_blocks(uint32_t lba, uint8_t *buffer, uint32_t count)
 {
@@ -47,7 +57,10 @@ static bool sd_read_blocks(uint32_t lba, uint8_t *buffer, uint32_t count)
                                        count,
                                        kSdTransferTimeoutMs);
     if(last_sd_result != MSD_OK)
+    {
+        sd_mark_not_ready();
         return false;
+    }
 
     uint32_t const start = System::GetNow();
     do
@@ -57,6 +70,7 @@ static bool sd_read_blocks(uint32_t lba, uint8_t *buffer, uint32_t count)
             return true;
     } while((System::GetNow() - start) < kSdTransferTimeoutMs);
 
+    sd_mark_not_ready();
     return false;
 }
 
@@ -71,7 +85,10 @@ static bool sd_write_blocks(uint32_t lba, uint8_t const *buffer, uint32_t count)
         count,
         kSdTransferTimeoutMs);
     if(last_sd_result != MSD_OK)
+    {
+        sd_mark_not_ready();
         return false;
+    }
 
     uint32_t const start = System::GetNow();
     do
@@ -81,6 +98,7 @@ static bool sd_write_blocks(uint32_t lba, uint8_t const *buffer, uint32_t count)
             return true;
     } while((System::GetNow() - start) < kSdTransferTimeoutMs);
 
+    sd_mark_not_ready();
     return false;
 }
 
@@ -115,6 +133,9 @@ static bool sd_init_with_config(SdmmcHandler::Config const &sd_cfg)
     sd_block_count = 0;
     sd_block_size  = kBlockSize;
 
+    if(!sd_card_detected())
+        return false;
+
     sdmmc.Init(sd_cfg);
 
     last_sd_result = BSP_SD_Init();
@@ -133,11 +154,28 @@ static bool sd_init_with_config(SdmmcHandler::Config const &sd_cfg)
     return sd_block_size == kBlockSize;
 }
 
+static void sd_reset_media_state(uint32_t retry_delay_ms)
+{
+    sd_ready          = false;
+    sd_init_attempted = false;
+    sd_block_count    = 0;
+    sd_block_size     = kBlockSize;
+    sd_next_init_ms   = retry_delay_ms == 0 ? 0 : System::GetNow() + retry_delay_ms;
+}
+
+static void sd_mark_not_ready(void)
+{
+    sd_reset_media_state(kSdInitRetryDelayMs);
+    sd_media_changed = true;
+}
+
 void GenericUSB_MSCInit(void)
 {
     msc_enabled       = true;
     sd_ready          = false;
     sd_init_attempted = false;
+    sd_media_changed  = false;
+    sd_next_init_ms   = 0;
     sd_block_count    = 0;
     sd_block_size     = kBlockSize;
     last_sd_result    = MSD_OK;
@@ -150,14 +188,12 @@ void GenericUSB_MSCSetEnabled(bool enabled)
 
     if(!enabled)
     {
-        sd_ready          = false;
-        sd_init_attempted = false;
-        sd_block_count    = 0;
-        sd_block_size     = kBlockSize;
+        sd_reset_media_state(0);
+        sd_media_changed = true;
     }
     else if(!sd_ready)
     {
-        sd_init_attempted = false;
+        sd_reset_media_state(0);
     }
 }
 
@@ -172,12 +208,24 @@ static bool ensure_sd_ready(void)
         return false;
 
     if(sd_ready)
-        return true;
+    {
+        if(!sd_card_detected())
+        {
+            sd_mark_not_ready();
+            return false;
+        }
 
-    if(sd_init_attempted)
+        return true;
+    }
+
+    if(sd_next_init_ms != 0
+       && static_cast<int32_t>(System::GetNow() - sd_next_init_ms) < 0)
+    {
         return false;
+    }
 
     sd_init_attempted = true;
+    sd_next_init_ms   = System::GetNow() + kSdInitRetryDelayMs;
 
     SdmmcHandler::Config sd_cfg;
     /* Conservative SD settings are intentional. Faster/4-bit modes enumerated
@@ -186,7 +234,14 @@ static bool ensure_sd_ready(void)
     sd_cfg.width = SdmmcHandler::BusWidth::BITS_1;
     sd_cfg.speed = SdmmcHandler::Speed::MEDIUM_SLOW;
     sd_cfg.clock_powersave = false;
-    return sd_init_with_config(sd_cfg);
+    bool const ready = sd_init_with_config(sd_cfg);
+    if(ready)
+    {
+        sd_init_attempted = false;
+        sd_next_init_ms   = 0;
+    }
+
+    return ready;
 }
 
 extern "C" uint8_t tud_msc_get_maxlun_cb(void)
@@ -219,6 +274,13 @@ extern "C" uint32_t tud_msc_inquiry2_cb(uint8_t lun,
 
 extern "C" bool tud_msc_test_unit_ready_cb(uint8_t lun)
 {
+    if(sd_media_changed)
+    {
+        sd_media_changed = false;
+        tud_msc_set_sense(lun, SCSI_SENSE_UNIT_ATTENTION, 0x28, 0x00);
+        return false;
+    }
+
     if(!ensure_sd_ready())
     {
         tud_msc_set_sense(lun, SCSI_SENSE_NOT_READY, 0x3a, 0x00);
@@ -251,8 +313,9 @@ extern "C" bool tud_msc_start_stop_cb(uint8_t lun,
 {
     (void)lun;
     (void)power_condition;
-    (void)start;
-    (void)load_eject;
+
+    if(load_eject && !start)
+        sd_mark_not_ready();
 
     return true;
 }
@@ -265,9 +328,10 @@ extern "C" int32_t tud_msc_read10_cb(uint8_t lun,
 {
     (void)lun;
 
-    if(!msc_enabled || !sd_ready || sd_block_size != kBlockSize || lba >= sd_block_count
-       || offset >= kBlockSize || bufsize == 0)
+    if(!msc_enabled || !ensure_sd_ready() || sd_block_size != kBlockSize
+       || lba >= sd_block_count || offset >= kBlockSize || bufsize == 0)
     {
+        tud_msc_set_sense(lun, SCSI_SENSE_NOT_READY, 0x3a, 0x00);
         return -1;
     }
 
@@ -280,7 +344,10 @@ extern "C" int32_t tud_msc_read10_cb(uint8_t lun,
     while(remaining > 0)
     {
         if(cur_lba >= sd_block_count)
+        {
+            tud_msc_set_sense(lun, SCSI_SENSE_MEDIUM_ERROR, 0x21, 0x00);
             return -1;
+        }
 
         uint32_t const chunk = (remaining < (kBlockSize - cur_off))
                                    ? remaining
@@ -311,9 +378,10 @@ extern "C" int32_t tud_msc_write10_cb(uint8_t lun,
 {
     (void)lun;
 
-    if(!msc_enabled || !sd_ready || sd_block_size != kBlockSize || lba >= sd_block_count
-       || offset >= kBlockSize || bufsize == 0)
+    if(!msc_enabled || !ensure_sd_ready() || sd_block_size != kBlockSize
+       || lba >= sd_block_count || offset >= kBlockSize || bufsize == 0)
     {
+        tud_msc_set_sense(lun, SCSI_SENSE_NOT_READY, 0x3a, 0x00);
         return -1;
     }
 
@@ -325,7 +393,10 @@ extern "C" int32_t tud_msc_write10_cb(uint8_t lun,
     while(remaining > 0)
     {
         if(cur_lba >= sd_block_count)
+        {
+            tud_msc_set_sense(lun, SCSI_SENSE_MEDIUM_ERROR, 0x21, 0x00);
             return -1;
+        }
 
         uint32_t const chunk = (remaining < (kBlockSize - cur_off))
                                    ? remaining

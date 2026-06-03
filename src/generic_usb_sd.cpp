@@ -15,17 +15,12 @@ using namespace daisy;
 
 #if DEBUG_TEST_SD
 
-extern "C" {
-extern SD_HandleTypeDef hsd1;
-}
-
 static SdmmcHandler sdmmc;
 static FatFSInterface fatfs;
 static bool sd_mount_attempted;
 static bool sd_mounted;
 static uint32_t sd_next_check_ms;
 static uint32_t sd_check_count;
-static uint8_t sd_sector[512] __attribute__((aligned(32)));
 
 static void sd_write(uint8_t const *data, uint32_t len)
 {
@@ -105,128 +100,6 @@ static void sd_log_fresult(const char *label, FRESULT res)
     }
 }
 
-static void sd_log_card_info(void)
-{
-    HAL_SD_CardInfoTypeDef info;
-    if(HAL_SD_GetCardInfo(&hsd1, &info) != HAL_OK)
-    {
-        sd_log("SD CARD INFO FAIL\r\n");
-        return;
-    }
-
-    char line[96];
-    int const len = snprintf(line,
-                             sizeof(line),
-                             "SD CARD INFO: blocks=%lu block_size=%lu\r\n",
-                             static_cast<unsigned long>(info.LogBlockNbr),
-                             static_cast<unsigned long>(info.LogBlockSize));
-    if(len > 0)
-    {
-        sd_write(reinterpret_cast<uint8_t const *>(line),
-                 static_cast<uint32_t>(len));
-    }
-}
-
-static uint32_t sd_le32(uint8_t const *p)
-{
-    return static_cast<uint32_t>(p[0]) | (static_cast<uint32_t>(p[1]) << 8)
-           | (static_cast<uint32_t>(p[2]) << 16)
-           | (static_cast<uint32_t>(p[3]) << 24);
-}
-
-static void sd_log_sector_summary(char const *label, uint8_t const *sector)
-{
-    char line[128];
-    int len = snprintf(line,
-                       sizeof(line),
-                       "%s sig=%02X%02X first=%02X %02X %02X %02X %02X %02X %02X %02X\r\n",
-                       label,
-                       sector[510],
-                       sector[511],
-                       sector[0],
-                       sector[1],
-                       sector[2],
-                       sector[3],
-                       sector[4],
-                       sector[5],
-                       sector[6],
-                       sector[7]);
-    if(len > 0)
-    {
-        sd_write(reinterpret_cast<uint8_t const *>(line),
-                 static_cast<uint32_t>(len));
-    }
-}
-
-static void sd_log_partition_summary(uint8_t const *sector)
-{
-    for(uint32_t i = 0; i < 4; i++)
-    {
-        uint8_t const *entry = sector + 446 + (i * 16);
-        uint8_t const type = entry[4];
-        uint32_t const lba = sd_le32(entry + 8);
-        uint32_t const count = sd_le32(entry + 12);
-
-        if(type == 0 && lba == 0 && count == 0)
-            continue;
-
-        char line[80];
-        int const len = snprintf(line,
-                                 sizeof(line),
-                                 "SD PART %lu: type=%02X lba=%lu blocks=%lu\r\n",
-                                 static_cast<unsigned long>(i + 1),
-                                 type,
-                                 static_cast<unsigned long>(lba),
-                                 static_cast<unsigned long>(count));
-        if(len > 0)
-        {
-            sd_write(reinterpret_cast<uint8_t const *>(line),
-                     static_cast<uint32_t>(len));
-        }
-    }
-}
-
-static bool sd_read_sector(uint32_t lba)
-{
-    memset(sd_sector, 0, sizeof(sd_sector));
-    if(HAL_SD_ReadBlocks(&hsd1, sd_sector, lba, 1, HAL_MAX_DELAY) != HAL_OK)
-        return false;
-
-    while(HAL_SD_GetCardState(&hsd1) != HAL_SD_CARD_TRANSFER) {}
-    return true;
-}
-
-static void sd_log_raw_layout(void)
-{
-    if(!sd_read_sector(0))
-    {
-        sd_log("SD RAW READ LBA0 FAIL\r\n");
-        return;
-    }
-
-    sd_log_sector_summary("SD LBA0", sd_sector);
-    sd_log_partition_summary(sd_sector);
-
-    uint8_t const first_type = sd_sector[446 + 4];
-    if(first_type == 0xEE)
-    {
-        sd_log("SD LAYOUT: GPT MBR type EE\r\n");
-        return;
-    }
-
-    uint32_t const first_lba = sd_le32(sd_sector + 446 + 8);
-    if(first_lba == 0 || first_lba == 0xFFFFFFFFu)
-        return;
-
-    if(!sd_read_sector(first_lba))
-    {
-        sd_log("SD RAW READ PART1 FAIL\r\n");
-        return;
-    }
-
-    sd_log_sector_summary("SD PART1 BOOT", sd_sector);
-}
-
 static void sd_log_path(void)
 {
     char line[48];
@@ -275,8 +148,6 @@ static void sd_mount_once(void)
     }
 
     sd_log_fresult("SD MOUNT FAIL: ", res);
-    sd_log_card_info();
-    sd_log_raw_layout();
 }
 
 static void sd_check_file(void)

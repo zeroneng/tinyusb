@@ -5,14 +5,11 @@
 #include <string.h>
 
 #include "daisy_seed.h"
-#include "global.h"
 #include "generic_usb_cdc.h"
+#include "global.h"
 #include "per/sdmmc.h"
 #include "tusb.h"
-
-extern "C" {
-extern SD_HandleTypeDef hsd1;
-}
+#include "util/bsp_sd_diskio.h"
 
 #if CFG_TUD_MSC
 
@@ -20,7 +17,6 @@ using namespace daisy;
 
 enum {
     kBlockSize = 512,
-    kSdTimeoutMs = 1000,
 };
 
 static SdmmcHandler sdmmc;
@@ -29,45 +25,32 @@ static bool         sd_init_attempted;
 static uint32_t     sd_block_count;
 static uint16_t     sd_block_size = kBlockSize;
 static uint8_t DMA_BUFFER_MEM_SECTION sd_sector[kBlockSize] __attribute__((aligned(32)));
-static HAL_StatusTypeDef last_hal_status;
-static uint32_t          last_hal_error;
-static HAL_SD_CardStateTypedef last_card_state;
+static uint8_t last_sd_result = MSD_OK;
+static uint8_t last_sd_state  = SD_TRANSFER_OK;
 
 static bool ensure_sd_ready(void);
-
-static bool wait_for_transfer(void)
-{
-    uint32_t const start = HAL_GetTick();
-    while((last_card_state = HAL_SD_GetCardState(&hsd1)) != HAL_SD_CARD_TRANSFER)
-    {
-        if((HAL_GetTick() - start) > 1000u)
-        {
-            last_hal_error = hsd1.ErrorCode;
-            return false;
-        }
-    }
-
-    return true;
-}
 
 static bool sd_read_blocks(uint32_t lba, uint8_t *buffer, uint32_t count)
 {
     if(!ensure_sd_ready() || count == 0)
         return false;
 
-    last_hal_status = HAL_SD_ReadBlocks(&hsd1, buffer, lba, count, kSdTimeoutMs);
-    last_hal_error  = hsd1.ErrorCode;
-    if(last_hal_status != HAL_OK)
+    last_sd_result = BSP_SD_ReadBlocks(reinterpret_cast<uint32_t *>(buffer),
+                                       lba,
+                                       count,
+                                       1000);
+    if(last_sd_result != MSD_OK)
+        return false;
+
+    uint32_t const start = System::GetNow();
+    do
     {
-        return false;
-    }
+        last_sd_state = BSP_SD_GetCardState();
+        if(last_sd_state == SD_TRANSFER_OK)
+            return true;
+    } while((System::GetNow() - start) < 1000u);
 
-    if(!wait_for_transfer())
-        return false;
-
-    SCB_InvalidateDCache_by_Addr(reinterpret_cast<uint32_t *>(buffer),
-                                 count * kBlockSize);
-    return true;
+    return false;
 }
 
 static bool sd_write_blocks(uint32_t lba, uint8_t const *buffer, uint32_t count)
@@ -75,21 +58,23 @@ static bool sd_write_blocks(uint32_t lba, uint8_t const *buffer, uint32_t count)
     if(!ensure_sd_ready() || count == 0)
         return false;
 
-    SCB_CleanDCache_by_Addr(reinterpret_cast<uint32_t *>(const_cast<uint8_t *>(buffer)),
-                            count * kBlockSize);
-
-    last_hal_status = HAL_SD_WriteBlocks(&hsd1,
-                                         const_cast<uint8_t *>(buffer),
-                                         lba,
-                                         count,
-                                         kSdTimeoutMs);
-    last_hal_error  = hsd1.ErrorCode;
-    if(last_hal_status != HAL_OK)
-    {
+    last_sd_result = BSP_SD_WriteBlocks(
+        reinterpret_cast<uint32_t *>(const_cast<uint8_t *>(buffer)),
+        lba,
+        count,
+        1000);
+    if(last_sd_result != MSD_OK)
         return false;
-    }
 
-    return wait_for_transfer();
+    uint32_t const start = System::GetNow();
+    do
+    {
+        last_sd_state = BSP_SD_GetCardState();
+        if(last_sd_state == SD_TRANSFER_OK)
+            return true;
+    } while((System::GetNow() - start) < 1000u);
+
+    return false;
 }
 
 static bool sd_read_sector(uint32_t lba)
@@ -104,12 +89,11 @@ static void log_sd_failure(char const *op, uint32_t lba)
     char line[128];
     snprintf(line,
              sizeof(line),
-             "MSC SD %s FAIL lba=%lu hal=%d err=0x%08lx state=%d\r\n",
+             "MSC SD %s FAIL lba=%lu sd=%u state=%u\r\n",
              op,
              static_cast<unsigned long>(lba),
-             static_cast<int>(last_hal_status),
-             static_cast<unsigned long>(last_hal_error),
-             static_cast<int>(last_card_state));
+             static_cast<unsigned int>(last_sd_result),
+             static_cast<unsigned int>(last_sd_state));
     GenericUSB_CDC_WriteString(line);
     GenericUSB_CDC_Flush();
 #else
@@ -124,22 +108,14 @@ static bool sd_init_with_config(SdmmcHandler::Config const &sd_cfg)
     sd_block_count = 0;
     sd_block_size  = kBlockSize;
 
-    HAL_SD_DeInit(&hsd1);
     sdmmc.Init(sd_cfg);
 
-    if(HAL_SD_Init(&hsd1) != HAL_OK)
+    last_sd_result = BSP_SD_Init();
+    if(last_sd_result != MSD_OK)
         return false;
 
-    if(sd_cfg.width == SdmmcHandler::BusWidth::BITS_4
-       && HAL_SD_ConfigWideBusOperation(&hsd1, SDMMC_BUS_WIDE_4B) != HAL_OK)
-    {
-        return false;
-    }
-
-    HAL_SD_CardInfoTypeDef info;
-    if(HAL_SD_GetCardInfo(&hsd1, &info) != HAL_OK)
-        return false;
-
+    BSP_SD_CardInfo info;
+    BSP_SD_GetCardInfo(&info);
     if(info.LogBlockNbr == 0 || info.LogBlockSize == 0)
         return false;
 
@@ -156,9 +132,8 @@ void GenericUSB_MSCInit(void)
     sd_init_attempted = false;
     sd_block_count    = 0;
     sd_block_size     = kBlockSize;
-    last_hal_status   = HAL_OK;
-    last_hal_error    = 0;
-    last_card_state   = HAL_SD_CARD_READY;
+    last_sd_result    = MSD_OK;
+    last_sd_state     = SD_TRANSFER_OK;
 }
 
 static bool ensure_sd_ready(void)

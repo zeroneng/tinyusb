@@ -32,13 +32,13 @@
 #endif
 
 #ifndef DEBUG_TEST_CDC
-#define DEBUG_TEST_CDC  USB_ENABLE_CDC
+#define DEBUG_TEST_CDC  0
 #endif
 #ifndef DEBUG_TEST_HID
-#define DEBUG_TEST_HID  USB_ENABLE_HID
+#define DEBUG_TEST_HID  0
 #endif
 #ifndef DEBUG_TEST_MIDI
-#define DEBUG_TEST_MIDI USB_ENABLE_MIDI
+#define DEBUG_TEST_MIDI 0
 #endif
 #ifndef DEBUG_TEST_SD
 #define DEBUG_TEST_SD   0

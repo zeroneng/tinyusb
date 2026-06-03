@@ -340,6 +340,53 @@ The MSC backend also handles SD media state changes conservatively:
 The host still owns the filesystem mount. Firmware exposes or withholds the
 block device media; the computer decides when to mount it again.
 
+For true card insertion/removal detection, wire the SD socket card-detect
+switch to a GPIO and use that instead of relying only on SD read/write
+failures. Most SD sockets expose card-detect as a mechanical switch. Common
+wiring is active-low: the pin is pulled up when no card is inserted and is
+shorted to ground when a card is inserted.
+
+Example GPIO-backed card detect:
+
+```cpp
+#include "daisy_seed.h"
+
+using namespace daisy;
+
+static GPIO sd_cd;
+
+void App_SDCardDetectInit(void)
+{
+    GPIO::Config cfg;
+    cfg.pin  = seed::D27;              // replace with your CD pin
+    cfg.mode = GPIO::Mode::INPUT;
+    cfg.pull = GPIO::Pull::PULLUP;     // typical active-low socket switch
+    sd_cd.Init(cfg);
+}
+
+bool App_SDCardPresent(void)
+{
+    return sd_cd.Read() == 0;          // active-low: low means card inserted
+}
+```
+
+Then make the MSC media-ready check use that function:
+
+```cpp
+static bool sd_card_detected(void)
+{
+    return App_SDCardPresent();
+}
+```
+
+With a real CD pin, the expected policy is:
+
+- CD says no card: report MSC media not ready and do not init SD
+- CD changes to no card: clear cached SD-ready state and report unit attention
+- CD changes to card present: retry SD init, then report unit attention
+- host still must eject/unmount before physical removal to avoid corrupting
+  the filesystem
+
 ## Build And Flash
 
 From this project:

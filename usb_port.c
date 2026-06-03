@@ -1,13 +1,13 @@
-#include "generic_usb_port.h"
+#include "usb_port.h"
 
 #include "stm32h7xx_hal.h"
 #include "tusb.h"
 #include "global.h"
-#include "generic_usb_audio.h"
-#include "generic_usb_cdc.h"
-#include "generic_usb_hid.h"
-#include "generic_usb_midi.h"
-#include "generic_usb_msc.h"
+#include "usb_audio.h"
+#include "usb_cdc.h"
+#include "usb_hid.h"
+#include "usb_midi.h"
+#include "usb_msc.h"
 
 #ifndef BOARD_TUD_RHPORT
 /* Daisy's external USB connector is wired to OTG HS running at full speed.

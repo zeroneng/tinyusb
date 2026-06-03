@@ -1,12 +1,12 @@
-#include "generic_usb_sd.h"
+#include "usb_sd.h"
 
 #include <stdio.h>
 #include <string.h>
 
 #include "daisy_seed.h"
 #include "ff.h"
-#include "generic_usb_cdc.h"
-#include "generic_usb_port.h"
+#include "usb_cdc.h"
+#include "usb_port.h"
 #include "global.h"
 #include "per/sdmmc.h"
 #include "sys/fatfs.h"

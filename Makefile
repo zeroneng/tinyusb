@@ -61,14 +61,14 @@ LDFLAGS = $(MCU) --specs=nano.specs --specs=nosys.specs -u _printf_float -T$(LIB
 
 CPP_SOURCES = \
 main.cpp \
-generic_usb_sd.cpp \
-generic_usb_msc.cpp
+usb_sd.cpp \
+usb_msc.cpp
 C_SOURCES = \
-generic_usb_port.c \
-generic_usb_audio.c \
-generic_usb_cdc.c \
-generic_usb_hid.c \
-generic_usb_midi.c \
+usb_port.c \
+usb_audio.c \
+usb_cdc.c \
+usb_hid.c \
+usb_midi.c \
 usb_descriptors.c \
 usbd_control.c \
 $(TINYUSB_DIR)/src/tusb.c \

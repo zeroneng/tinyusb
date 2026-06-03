@@ -1,11 +1,11 @@
-#include "generic_usb_msc.h"
+#include "usb_msc.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "daisy_seed.h"
-#include "generic_usb_cdc.h"
+#include "usb_cdc.h"
 #include "global.h"
 #include "per/sdmmc.h"
 #include "tusb.h"

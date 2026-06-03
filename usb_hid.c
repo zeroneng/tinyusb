@@ -1,9 +1,9 @@
-#include "generic_usb_hid.h"
+#include "usb_hid.h"
 
 #include <string.h>
 #include "tusb.h"
 #include "global.h"
-#include "generic_usb_port.h"
+#include "usb_port.h"
 
 #if USB_ENABLE_HID
 

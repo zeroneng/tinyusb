@@ -23,17 +23,6 @@ The SD-backed MSC path uses libDaisy-facing SD access:
 - libDaisy `BSP_SD_*` polling block APIs for raw sector reads/writes
 - no app-level `HAL_SD_`, `hsd1`, or `SD_HandleTypeDef` calls
 
-The tested stable SD settings are intentionally conservative:
-
-```cpp
-sd_cfg.width = SdmmcHandler::BusWidth::BITS_1;
-sd_cfg.speed = SdmmcHandler::Speed::MEDIUM_SLOW;
-sd_cfg.clock_powersave = false;
-```
-
-Faster and 4-bit modes enumerated during testing but timed out during host
-sector reads on the tested cards.
-
 ## Editable USB Identity
 
 Change USB identity and feature flags in `global.h`:
@@ -75,20 +64,20 @@ At minimum, the TinyUSB integration depends on:
 global.h
 tusb_config.h
 usb_descriptors.h
-generic_usb_audio.h
-generic_usb_cdc.h
-generic_usb_hid.h
-generic_usb_midi.h
-generic_usb_msc.h
-generic_usb_port.h
-generic_usb_sd.h
-generic_usb_audio.c
-generic_usb_cdc.c
-generic_usb_hid.c
-generic_usb_midi.c
-generic_usb_msc.cpp
-generic_usb_port.c
-generic_usb_sd.cpp
+usb_audio.h
+usb_cdc.h
+usb_hid.h
+usb_midi.h
+usb_msc.h
+usb_port.h
+usb_sd.h
+usb_audio.c
+usb_cdc.c
+usb_hid.c
+usb_midi.c
+usb_msc.cpp
+usb_port.c
+usb_sd.cpp
 usb_descriptors.c
 usbd_control.c
 tinyusb/
@@ -100,14 +89,14 @@ In the target app, include and initialize the wrapper:
 
 ```cpp
 #include "daisy_seed.h"
-#include "generic_usb_port.h"
+#include "usb_port.h"
 
 extern "C" {
 #include "global.h"
 #if USB_ENABLE_AUDIO
-#include "generic_usb_audio.h"
+#include "usb_audio.h"
 #endif
-#include "generic_usb_sd.h"
+#include "usb_sd.h"
 }
 ```
 
@@ -216,7 +205,7 @@ __attribute__((weak)) void OTG_FS_IRQHandler(void);
 
 That weak-handler change is not required for this project as tested, because
 this project uses OTG HS on the external Daisy USB connector and provides its
-own non-weak OTG HS handlers in `generic_usb_port.c`.
+own non-weak OTG HS handlers in `usb_port.c`.
 
 It may matter if you move TinyUSB to OTG FS/internal USB or if another project
 needs to override libDaisy's default FS USB handlers. In that case, weak FS
@@ -225,7 +214,7 @@ without linker conflicts.
 
 For the least-change copy into another Daisy Seed project, keep TinyUSB on
 external USB / OTG HS with `BOARD_TUD_RHPORT=1` and copy the OTG HS handlers
-from `generic_usb_port.c`.
+from `usb_port.c`.
 
 ## MSC SD Notes
 

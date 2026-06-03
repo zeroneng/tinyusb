@@ -1,11 +1,11 @@
-#include "generic_usb_midi.h"
+#include "usb_midi.h"
 
 #include <stdio.h>
 
 #include "tusb.h"
 #include "global.h"
-#include "generic_usb_cdc.h"
-#include "generic_usb_port.h"
+#include "usb_cdc.h"
+#include "usb_port.h"
 
 #if USB_ENABLE_MIDI
 

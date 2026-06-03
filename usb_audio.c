@@ -1,4 +1,4 @@
-/* generic_usb_audio.c — Generic USB stereo-mic UAC2 audio control + data plane
+/* usb_audio.c — Generic USB stereo-mic UAC2 audio control + data plane
  *
  * Windows-start-safe UAC2/no-feedback descriptor, with all TinyUSB audio
  * read/write calls moved out of the Daisy audio callback.
@@ -15,7 +15,7 @@
  *   - chooses 47 / 48 / 49 stereo frames from mic FIFO depth thresholds
  */
 
-#include "generic_usb_audio.h"
+#include "usb_audio.h"
 
 #include <stdbool.h>
 #include <string.h>

@@ -1,6 +1,6 @@
 #include <string.h>
 #include "tusb.h"
-#include "generic_usb_hid.h"
+#include "usb_hid.h"
 #include "global.h"
 #include "usb_descriptors.h"
 

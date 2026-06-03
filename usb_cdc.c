@@ -1,4 +1,4 @@
-/* generic_usb_cdc.c — Generic USB CDC ACM wrapper
+/* usb_cdc.c — Generic USB CDC ACM wrapper
  *
  * 512-byte software RX ring:
  *   tud_cdc_rx_cb() pushes bytes immediately on TinyUSB task callback.
@@ -6,7 +6,7 @@
  *   GenericUSB_CDCTask() only flushes the TX FIFO.
  */
 
-#include "generic_usb_cdc.h"
+#include "usb_cdc.h"
 
 #include <stdio.h>
 #include <string.h>

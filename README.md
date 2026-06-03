@@ -47,9 +47,9 @@ Change USB identity and feature flags in `global.h`:
 Copy these folders/files into the target project:
 
 ```text
-generic_usb_*.c
-generic_usb_*.cpp
-generic_usb_*.h
+usb_*.c
+usb_*.cpp
+usb_*.h
 global.h
 tusb_config.h
 usb_descriptors.c
@@ -136,7 +136,7 @@ from the main loop.
 
 The target project must compile:
 
-- the copied root-level `generic_usb_*.c`, `generic_usb_*.cpp`, and descriptor files
+- the copied root-level `usb_*.c`, `usb_*.cpp`, and descriptor files
 - TinyUSB core/device/class files under `tinyusb/src`
 - TinyUSB DWC2 port files:
   - `portable/synopsys/dwc2/dwc2_common.c`

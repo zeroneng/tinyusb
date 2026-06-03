@@ -10,7 +10,10 @@
 #include "generic_usb_msc.h"
 
 #ifndef BOARD_TUD_RHPORT
-#define BOARD_TUD_RHPORT 0
+/* Daisy's external USB connector is wired to OTG HS running at full speed.
+ * TinyUSB calls this root hub port 1. Port 0 is the internal OTG FS block.
+ */
+#define BOARD_TUD_RHPORT 1
 #endif
 
 static uint32_t generic_usb_now_ms;
@@ -21,6 +24,9 @@ static void generic_usb_force_disconnect(void)
 
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  /* Pull D+ low briefly before TinyUSB starts. This gives the host a clean
+   * detach/attach edge after flashing or soft reset.
+   */
   gpio.Pin   = GPIO_PIN_15;
   gpio.Mode  = GPIO_MODE_OUTPUT_PP;
   gpio.Pull  = GPIO_NOPULL;
@@ -37,6 +43,10 @@ static void generic_usb_gpio_init(void)
   __HAL_RCC_SYSCFG_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  /* OTG HS in full-speed mode uses the external Daisy USB pins:
+   *   PB14 = DM
+   *   PB15 = DP
+   */
   gpio.Pin       = GPIO_PIN_14 | GPIO_PIN_15;
   gpio.Mode      = GPIO_MODE_AF_PP;
   gpio.Pull      = GPIO_NOPULL;
@@ -77,6 +87,9 @@ void GenericUSB_Init(void)
   GenericUSB_MSCInit();
 #endif
 
+  /* The Daisy external port is self-powered from the board side for this
+   * bring-up, so do not wait for a hardware VBUS sense pin before attaching.
+   */
   tud_configure_dwc2_t cfg = CFG_TUD_CONFIGURE_DWC2_DEFAULT;
   cfg.vbus_sensing = false;
   tud_configure(BOARD_TUD_RHPORT, TUD_CFGID_DWC2, &cfg);
@@ -120,6 +133,10 @@ void GenericUSB_OTG_HS_IRQHandler(void)
   tud_int_handler(BOARD_TUD_RHPORT);
 }
 
+/* These handlers intentionally replace the libDaisy/ST USB device handlers
+ * for OTG HS. Projects that also use libDaisy's USB CDC stack must keep that
+ * stack off this peripheral while TinyUSB owns it.
+ */
 void OTG_HS_IRQHandler(void)
 {
   GenericUSB_OTG_HS_IRQHandler();

@@ -1,7 +1,7 @@
 TARGET = bypass
 
 LIBDAISY_DIR ?= ../../libDaisy
-TINYUSB_DIR ?= Middlewares/tinyusb
+TINYUSB_DIR ?= tinyusb
 BUILD_DIR = build
 USE_FATFS = 0
 
@@ -30,7 +30,6 @@ endif
 
 C_INCLUDES = \
 -I. \
--Iinclude \
 -I$(LIBDAISY_DIR) \
 -I$(LIBDAISY_DIR)/src \
 -I$(LIBDAISY_DIR)/src/sys \
@@ -62,16 +61,16 @@ LDFLAGS = $(MCU) --specs=nano.specs --specs=nosys.specs -u _printf_float -T$(LIB
 
 CPP_SOURCES = \
 main.cpp \
-src/generic_usb_sd.cpp \
-src/generic_usb_msc.cpp
+generic_usb_sd.cpp \
+generic_usb_msc.cpp
 C_SOURCES = \
-src/generic_usb_port.c \
-src/generic_usb_audio.c \
-src/generic_usb_cdc.c \
-src/generic_usb_hid.c \
-src/generic_usb_midi.c \
-src/usb_descriptors.c \
-src/usbd_control.c \
+generic_usb_port.c \
+generic_usb_audio.c \
+generic_usb_cdc.c \
+generic_usb_hid.c \
+generic_usb_midi.c \
+usb_descriptors.c \
+usbd_control.c \
 $(TINYUSB_DIR)/src/tusb.c \
 $(TINYUSB_DIR)/src/common/tusb_fifo.c \
 $(TINYUSB_DIR)/src/device/usbd.c \

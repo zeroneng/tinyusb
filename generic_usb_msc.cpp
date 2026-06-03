@@ -17,6 +17,7 @@ using namespace daisy;
 
 enum {
     kBlockSize = 512,
+    kSdTransferTimeoutMs = 1000,
 };
 
 static SdmmcHandler sdmmc;
@@ -24,6 +25,11 @@ static bool         sd_ready;
 static bool         sd_init_attempted;
 static uint32_t     sd_block_count;
 static uint16_t     sd_block_size = kBlockSize;
+/* Scratch sector for partial-sector MSC transfers. Keep it in libDaisy's
+ * DMA-safe memory section because the BSP SD block APIs may use DMA under the
+ * hood. Direct stack or normal static buffers caused unreliable SD reads in
+ * earlier STM HAL experiments.
+ */
 static uint8_t DMA_BUFFER_MEM_SECTION sd_sector[kBlockSize] __attribute__((aligned(32)));
 static uint8_t last_sd_result = MSD_OK;
 static uint8_t last_sd_state  = SD_TRANSFER_OK;
@@ -38,7 +44,7 @@ static bool sd_read_blocks(uint32_t lba, uint8_t *buffer, uint32_t count)
     last_sd_result = BSP_SD_ReadBlocks(reinterpret_cast<uint32_t *>(buffer),
                                        lba,
                                        count,
-                                       1000);
+                                       kSdTransferTimeoutMs);
     if(last_sd_result != MSD_OK)
         return false;
 
@@ -48,7 +54,7 @@ static bool sd_read_blocks(uint32_t lba, uint8_t *buffer, uint32_t count)
         last_sd_state = BSP_SD_GetCardState();
         if(last_sd_state == SD_TRANSFER_OK)
             return true;
-    } while((System::GetNow() - start) < 1000u);
+    } while((System::GetNow() - start) < kSdTransferTimeoutMs);
 
     return false;
 }
@@ -62,7 +68,7 @@ static bool sd_write_blocks(uint32_t lba, uint8_t const *buffer, uint32_t count)
         reinterpret_cast<uint32_t *>(const_cast<uint8_t *>(buffer)),
         lba,
         count,
-        1000);
+        kSdTransferTimeoutMs);
     if(last_sd_result != MSD_OK)
         return false;
 
@@ -72,7 +78,7 @@ static bool sd_write_blocks(uint32_t lba, uint8_t const *buffer, uint32_t count)
         last_sd_state = BSP_SD_GetCardState();
         if(last_sd_state == SD_TRANSFER_OK)
             return true;
-    } while((System::GetNow() - start) < 1000u);
+    } while((System::GetNow() - start) < kSdTransferTimeoutMs);
 
     return false;
 }
@@ -147,6 +153,9 @@ static bool ensure_sd_ready(void)
     sd_init_attempted = true;
 
     SdmmcHandler::Config sd_cfg;
+    /* Conservative SD settings are intentional. Faster/4-bit modes enumerated
+     * but timed out under host sector reads on the tested cards.
+     */
     sd_cfg.width = SdmmcHandler::BusWidth::BITS_1;
     sd_cfg.speed = SdmmcHandler::Speed::MEDIUM_SLOW;
     sd_cfg.clock_powersave = false;
@@ -297,6 +306,10 @@ extern "C" int32_t tud_msc_write10_cb(uint8_t lun,
 
         if(chunk != kBlockSize || cur_off != 0)
         {
+            /* TinyUSB can ask for byte ranges that do not cover a whole
+             * sector. SD writes are sector-granular, so preserve untouched
+             * bytes with a read/modify/write cycle.
+             */
             if(!sd_read_sector(cur_lba))
             {
                 tud_msc_set_sense(lun, SCSI_SENSE_MEDIUM_ERROR, 0x11, 0x00);

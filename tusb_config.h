@@ -8,7 +8,10 @@ extern "C" {
 #include "global.h"
 
 #ifndef BOARD_TUD_RHPORT
-#define BOARD_TUD_RHPORT        0
+/* Daisy Seed external USB is OTG HS in full-speed mode. Use RHPort 1 unless
+ * you are intentionally moving TinyUSB to the internal OTG FS peripheral.
+ */
+#define BOARD_TUD_RHPORT        1
 #endif
 #ifndef BOARD_DEVICE_RHPORT_NUM
 #define BOARD_DEVICE_RHPORT_NUM BOARD_TUD_RHPORT
@@ -140,7 +143,9 @@ extern "C" {
 #define CFG_TUD_MIDI_TX_BUFSIZE  64
 #define CFG_TUD_MIDI_EP_BUFSIZE  64
 
-/* MSC */
+/* MSC callbacks move 512-byte logical sectors, but the full-speed bulk
+ * endpoint descriptor must still advertise 64-byte max packets.
+ */
 #define CFG_TUD_MSC_EP_BUFSIZE   512
 
 #ifdef __cplusplus

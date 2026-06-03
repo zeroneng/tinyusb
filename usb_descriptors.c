@@ -160,6 +160,9 @@ static uint8_t desc_configuration[] =
 #endif
 
 #if USB_ENABLE_MSC
+  /* Full-speed bulk endpoints advertise 64-byte packets. The MSC transfer
+   * buffer remains 512 bytes in tusb_config.h for sector-sized callbacks.
+   */
   TUD_MSC_DESCRIPTOR(ITF_NUM_MSC, STRID_MSC, EPNUM_MSC_OUT, EPNUM_MSC_IN, 64)
 #endif
 };

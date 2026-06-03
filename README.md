@@ -127,10 +127,93 @@ while(1)
 }
 ```
 
-For audio, copy the `AudioCallback` pattern from `main.cpp`. The important
-rule is that the Daisy audio callback only pushes/pops samples through the
-local audio FIFOs. TinyUSB audio reads/writes stay in `GenericUSB_AudioTask()`
-from the main loop.
+## Using Your Own Audio Callback
+
+You do not need to use the example `AudioCallback` from this project. If your
+application already owns the Daisy audio callback, keep it and insert only the
+USB audio FIFO calls.
+
+The audio callback must not call TinyUSB directly. It should only:
+
+- convert the audio you want to send to the host into interleaved stereo s16
+- call `AudioIF_PushSamples(line_to_usb, frames)`
+- call `AudioIF_PopSamples(usb_from_host, frames)`
+- mix or route `usb_from_host` into your own output buffers
+
+Drop-in pattern for an app that already owns the audio callback:
+
+```cpp
+#include "usb_audio.h"
+
+static float ClampAudio(float x)
+{
+    if(x > 1.0f)
+        return 1.0f;
+    if(x < -1.0f)
+        return -1.0f;
+    return x;
+}
+
+static void ServiceUSBAudioInsideCallback(AudioHandle::InputBuffer in,
+                                          AudioHandle::OutputBuffer out,
+                                          size_t size)
+{
+    int16_t to_host[GENERIC_USB_AUDIO_FRAMES_PER_MS
+                    * GENERIC_USB_AUDIO_MIC_CHANNELS];
+    int16_t from_host[GENERIC_USB_AUDIO_FRAMES_PER_MS
+                      * GENERIC_USB_AUDIO_SPK_CHANNELS];
+
+    const size_t frames = size > GENERIC_USB_AUDIO_FRAMES_PER_MS
+                              ? GENERIC_USB_AUDIO_FRAMES_PER_MS
+                              : size;
+
+    /* Choose what the computer records.
+     * Use in[0/1][i] for physical line input, or use out[0/1][i] after your
+     * app DSP if you want the host to record your app's final output.
+     */
+    for(size_t i = 0; i < frames; i++)
+    {
+        const float rec_l = ClampAudio(in[0][i]);
+        const float rec_r = ClampAudio(in[1][i]);
+
+        to_host[2 * i + 0] = static_cast<int16_t>(rec_l * 32767.0f);
+        to_host[2 * i + 1] = static_cast<int16_t>(rec_r * 32767.0f);
+    }
+
+    AudioIF_PushSamples(to_host, frames);
+
+    /* Add USB playback from the computer to your already-filled outputs.
+     * You can route this elsewhere instead if your app has its own mixer.
+     */
+    const uint32_t got = AudioIF_PopSamples(from_host, frames);
+    for(size_t i = 0; i < got; i++)
+    {
+        const float usb_l = static_cast<float>(from_host[2 * i + 0])
+                            / 32768.0f;
+        const float usb_r = static_cast<float>(from_host[2 * i + 1])
+                            / 32768.0f;
+
+        out[0][i] = ClampAudio(out[0][i] + usb_l);
+        out[1][i] = ClampAudio(out[1][i] + usb_r);
+    }
+}
+
+void YourExistingAudioCallback(AudioHandle::InputBuffer in,
+                               AudioHandle::OutputBuffer out,
+                               size_t size)
+{
+    /* Your existing callback stays in charge. Keep your synth, sequencer,
+     * effects, mixer, and output routing here.
+     */
+    RunYourExistingAudioCode(in, out, size);
+
+    /* Insert this near the end, after out[] contains your app's output. */
+    ServiceUSBAudioInsideCallback(in, out, size);
+}
+```
+
+`GenericUSB_AudioTask()` runs from `GenericUSB_Task()` in the main loop. That
+is where TinyUSB audio reads and writes happen.
 
 ## Makefile Requirements
 
@@ -230,6 +313,22 @@ can process normal SD sectors.
 The MSC write path handles partial-sector writes with read/modify/write. That
 is required because TinyUSB can request byte ranges while the SD card writes
 whole sectors.
+
+MSC can be gated at runtime:
+
+```cpp
+GenericUSB_MSCSetEnabled(false); // host still sees MSC interface, media not ready
+GenericUSB_MSCSetEnabled(true);  // SD media becomes available again
+```
+
+This does not remove the MSC interface from the USB descriptor. USB descriptors
+are fixed after enumeration, so fully hiding/showing MSC requires a USB
+detach/re-enumeration path with different descriptors. The runtime gate only
+controls whether the SD media is reported ready and whether read/write calls
+are allowed.
+
+Do not disable MSC while the host has the disk mounted or is writing. Ask the
+host to eject/unmount first, then disable it.
 
 ## Build And Flash
 

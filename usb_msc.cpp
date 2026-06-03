@@ -21,6 +21,7 @@ enum {
 };
 
 static SdmmcHandler sdmmc;
+static bool         msc_enabled = true;
 static bool         sd_ready;
 static bool         sd_init_attempted;
 static uint32_t     sd_block_count;
@@ -134,6 +135,7 @@ static bool sd_init_with_config(SdmmcHandler::Config const &sd_cfg)
 
 void GenericUSB_MSCInit(void)
 {
+    msc_enabled       = true;
     sd_ready          = false;
     sd_init_attempted = false;
     sd_block_count    = 0;
@@ -142,8 +144,33 @@ void GenericUSB_MSCInit(void)
     last_sd_state     = SD_TRANSFER_OK;
 }
 
+void GenericUSB_MSCSetEnabled(bool enabled)
+{
+    msc_enabled = enabled;
+
+    if(!enabled)
+    {
+        sd_ready          = false;
+        sd_init_attempted = false;
+        sd_block_count    = 0;
+        sd_block_size     = kBlockSize;
+    }
+    else if(!sd_ready)
+    {
+        sd_init_attempted = false;
+    }
+}
+
+bool GenericUSB_MSCIsEnabled(void)
+{
+    return msc_enabled;
+}
+
 static bool ensure_sd_ready(void)
 {
+    if(!msc_enabled)
+        return false;
+
     if(sd_ready)
         return true;
 
@@ -214,7 +241,7 @@ extern "C" void tud_msc_capacity_cb(uint8_t lun,
 extern "C" bool tud_msc_is_writable_cb(uint8_t lun)
 {
     (void)lun;
-    return true;
+    return msc_enabled;
 }
 
 extern "C" bool tud_msc_start_stop_cb(uint8_t lun,
@@ -238,7 +265,7 @@ extern "C" int32_t tud_msc_read10_cb(uint8_t lun,
 {
     (void)lun;
 
-    if(!sd_ready || sd_block_size != kBlockSize || lba >= sd_block_count
+    if(!msc_enabled || !sd_ready || sd_block_size != kBlockSize || lba >= sd_block_count
        || offset >= kBlockSize || bufsize == 0)
     {
         return -1;
@@ -284,7 +311,7 @@ extern "C" int32_t tud_msc_write10_cb(uint8_t lun,
 {
     (void)lun;
 
-    if(!sd_ready || sd_block_size != kBlockSize || lba >= sd_block_count
+    if(!msc_enabled || !sd_ready || sd_block_size != kBlockSize || lba >= sd_block_count
        || offset >= kBlockSize || bufsize == 0)
     {
         return -1;
